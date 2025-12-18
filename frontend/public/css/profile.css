@@ -6,8 +6,9 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #455088 0%, #296e20 100%);
+    background: linear-gradient(135deg, #0b7a23 0%, #1a13d6 100%);
     min-height: 100vh;
+    display : flex;
     padding: 20px;
 }
 
@@ -166,6 +167,7 @@ body {
 .actions {
     margin-top: 30px;
     display: flex;
+    justify-content: space-between;
     gap: 15px;
 }
 
@@ -185,6 +187,7 @@ body {
 .btn-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
+    margin-right: 135px;
 }
 
 .btn-primary:hover {
@@ -459,7 +462,7 @@ tr:hover {
 @media (max-width: 768px) {
     body {
         padding: 10px;
-        background: linear-gradient(135deg, #455088 0%, #296e20 100%);
+        background: linear-gradient(135deg, #0b7a23 0%, #1a13d6 100%);
         min-height: auto;
     }
 

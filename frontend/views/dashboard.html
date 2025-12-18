@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Dashboard</title>
+
+    <!-- Simple styling -->
+    <style>
+        :root {
+            --bg: #0f1724;
+            --card: #0b1220;
+            --muted: #9aa4b2;
+            --accent: #22c1c3;
+            --accent-2: #3eaef7;
+            --glass: rgba(255, 255, 255, 0.03);
+            --radius: 10px;
+            --gap: 18px;
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            font-family: Inter, Segoe UI, system-ui, Roboto, Arial;
+            background: linear-gradient(180deg, #06121a 0%, #071526 100%);
+            color: #e6eef6
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none
+        }
+
+        .app {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: var(--gap);
+            min-height: 100vh;
+            padding: 18px
+        }
+
+
+        /* sidebar */
+        .sidebar {
+            background: linear-gradient(180deg, var(--card), #071224);
+            border-radius: var(--radius);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px
+        }
+
+        .brand {
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .brand .logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            display: inline-block
+        }
+
+        nav {
+            margin-top: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px
+        }
+
+        .nav-item {
+            padding: 10px;
+            border-radius: 8px;
+            color: var(--muted);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            cursor: pointer
+        }
+
+        .nav-item:hover {
+            background: var(--glass);
+            color: #fff
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(62, 174, 247, 0.12), rgba(34, 193, 195, 0.06));
+            color: #fff
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        /* main */
+        .main {
+            display: flex;
+            flex-direction: column;
+            gap: 18px
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: transparent
+        }
+
+        .search {
+            flex: 1;
+            max-width: 520px;
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .search input {
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.02);
+            color: inherit
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px
+        }
+
+        .card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+            padding: 16px;
+            border-radius: 12px;
+            min-height: 84px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between
+        }
+
+        .card .title {
+            font-size: 13px;
+            color: var(--muted)
+        }
+
+        .card .value {
+            font-size: 20px;
+            font-weight: 700
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 12px;
+            align-items: start
+        }
+
+        .panel {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+            padding: 16px;
+            border-radius: 12px
+        }
+
+        .panel h3 {
+            margin: 0 0 12px 0;
+            font-size: 16px
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        thead th {
+            font-size: 12px;
+            color: var(--muted);
+            text-align: left;
+            padding: 8px 6px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.03)
+        }
+
+        tbody td {
+            padding: 10px 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02)
+        }
+
+        .small {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        /* responsive */
+        @media (max-width:980px) {
+            .app {
+                grid-template-columns: 1fr;
+                padding: 12px
+            }
+
+            .cards {
+                grid-template-columns: repeat(2, 1fr)
+            }
+
+            .grid {
+                grid-template-columns: 1fr
+            }
+
+            .sidebar {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                padding: 10px;
+                gap: 10px;
+                border-radius: 10px
+            }
+
+            .brand {
+                font-size: 15px
+            }
+        }
+
+        @media (max-width:520px) {
+            .cards {
+                grid-template-columns: 1fr
+            }
+
+            .search {
+                display: none
+            }
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: 0;
+            color: var(--muted);
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar" aria-label="Sidebar">
+            <div class="brand">
+                <span class="logo" aria-hidden="true"></span>
+                <span>My Project</span>
+            </div>
+
+            <nav>
+                <div class="nav-item active">Overview</div>
+                <div class="nav-item">Analytics</div>
+                <div class="nav-item">Projects</div>
+                <div class="nav-item">Teams</div>
+                <div class="nav-item">Settings</div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div id="furkan" class="small">Signed in as</div>
+                <div>furkanali@example.com</div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="topbar">
+                <div style="display:flex;gap:12px;align-items:center;width:100%">
+                    <button class="toggle-btn" id="toggleSidebar" title="Toggle sidebar">☰</button>
+                    <div class="search" role="search">
+                        <input type="search" placeholder="Search..." aria-label="Search" />
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:12px;align-items:center">
+                    <div class="small">Notifications</div>
+                    <div class="small">Profile</div>
+                </div>
+            </div>
+
+            <section class="cards" aria-label="Quick stats">
+                <div class="card">
+                    <div class="title">Total Users</div>
+                    <div class="value" id="usersCount">1,248</div>
+                </div>
+                <div class="card">
+                    <div class="title">Active Today</div>
+                    <div class="value">324</div>
+                </div>
+                <div class="card">
+                    <div class="title">New Signups</div>
+                    <div class="value">58</div>
+                </div>
+                <div class="card">
+                    <div class="title">Revenue</div>
+                    <div class="value">$12,430</div>
+                </div>
+            </section>
+
+            <section class="grid">
+                <div class="panel">
+                    <h3>Traffic (last 7 days)</h3>
+                    <div style="position:relative;height:240px;width:100%">
+                        <canvas id="trafficChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Recent Activity</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th class="small">Action</th>
+                                <th class="small">When</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Alice</td>
+                                <td class="small">Created project "Apollo"</td>
+                                <td class="small">2h ago</td>
+                            </tr>
+                            <tr>
+                                <td>Bob</td>
+                                <td class="small">Joined team "Design"</td>
+                                <td class="small">6h ago</td>
+                            </tr>
+                            <tr>
+                                <td>Charlie</td>
+                                <td class="small">Deployed release v1.2</td>
+                                <td class="small">1d ago</td>
+                            </tr>
+                            <tr>
+                                <td>Deniz</td>
+                                <td class="small">Uploaded assets</td>
+                                <td class="small">2d ago</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Chart.js CDN (optional) and small script to populate chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Sidebar toggle for small screens
+        const sidebar = document.querySelector('.sidebar');
+        document.getElementById('toggleSidebar').addEventListener('click', () => {
+            if (window.innerWidth <= 980) {
+                sidebar.style.display = (sidebar.style.display === 'none') ? 'flex' : 'none';
+            } else {
+                // collapse/expand for wider screens (visual only)
+                sidebar.style.width = (sidebar.style.width === '64px') ? '260px' : '64px';
+                document.querySelectorAll('.nav-item, .sidebar-footer, .brand span:not(.logo)').forEach(el => {
+                    if (sidebar.style.width === '64px') el.style.display = 'none'; else el.style.display = '';
+                });
+            }
+        });
+
+        // Simple chart
+        let trafficChart = null;
+        const ctx = document.getElementById('trafficChart').getContext('2d');
+        trafficChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Visits',
+                    data: [420, 532, 610, 490, 720, 680, 790],
+                    borderColor: 'rgba(62,174,247,0.95)',
+                    backgroundColor: 'rgba(62,174,247,0.12)',
+                    tension: 0.32,
+                    pointRadius: 3,
+                    pointBackgroundColor: 'rgba(255,255,255,0.9)'
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#9aa4b2' } },
+                    y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#9aa4b2' } }
+                }
+            }
+        });
+
+    </script>
+</body>
+
+</html>

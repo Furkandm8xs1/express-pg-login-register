@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="profile.css">
+  <script src="func.js"></script>
+  <script src="sidebarhover.js"></script>
+  <script src="profile.js" defer> </script>
+  <title>Hesabım</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0b7a23 0%, #1a13d6 100%);
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+    }
+
+    /* ============================= 
+     
+    Sidebar Styles
+    BU BİR TEST  SİTESİDİR LÜTFEN KARIŞTIRMAYIN
+
+    ============================= */
+
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100vh;
+      width: 250px;
+      background: linear-gradient(180deg, #1e1e2e 0%, #2d2d44 100%);
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.collapsed {
+      width: 70px;
+    }
+
+    .sidebar-header {
+      padding: 25px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .logo {
+      font-size: 28px;
+      transition: transform 0.3s;
+    }
+
+    .sidebar:hover .logo {
+      transform: rotate(360deg);
+    }
+
+    .sidebar-title {
+      color: white;
+      font-size: 20px;
+      font-weight: 700;
+      white-space: nowrap;
+      opacity: 1;
+      transition: opacity 0.3s;
+    }
+
+    .sidebar.collapsed .sidebar-title {
+      opacity: 0;
+      width: 0;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 20px 0;
+      overflow-y: auto;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px 20px;
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: all 0.3s;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      transition: height 0.3s;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .nav-item:hover::before,
+    .nav-item.active::before {
+      height: 40px;
+    }
+
+    .nav-icon {
+      font-size: 22px;
+      min-width: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s;
+    }
+
+    .nav-item:hover .nav-icon {
+      transform: scale(1.2);
+    }
+
+    .nav-text {
+      white-space: nowrap;
+      font-weight: 500;
+      opacity: 1;
+      transition: opacity 0.3s;
+    }
+
+    .sidebar.collapsed .nav-text {
+      opacity: 0;
+      width: 0;
+    }
+
+    .sidebar-toggle {
+      padding: 15px;
+      text-align: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      color: white;
+      font-size: 24px;
+      transition: background 0.3s;
+    }
+
+    .sidebar-toggle:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* ============================= */
+    /* Main Content Styles */
+    /* ============================= */
+
+
+    .main-content {
+      margin-left: 250px;
+      width: calc(100% - 250px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 20px;
+    }
+
+    .main-content.expanded {
+      margin-left: 70px;
+      width: calc(100% - 70px);
+    }
+
+    /* Mobile Sidebar Slide Animation */
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        left: -250px;
+        width: 250px;
+        transition: left 0.3s ease-in-out;
+        z-index: 1001;
+      }
+
+      .sidebar.active {
+        left: 0;
+      }
+
+      .sidebar.collapsed {
+        width: 250px;
+      }
+
+      .sidebar.collapsed.active {
+        left: 0;
+      }
+
+      .main-content {
+        margin-left: 0;
+        width: 100%;
+      }
+
+      .main-content.expanded {
+        margin-left: 0;
+        width: 100%;
+      }
+
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+      }
+
+      .sidebar-overlay.active {
+        display: block;
+      }
+
+      .mobile-menu-toggle {
+        display: flex;
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        z-index: 1002;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+      }
+
+      .mobile-menu-toggle:hover {
+        transform: scale(1.1);
+      }
+    }
+
+    @media (min-width: 769px) {
+      .mobile-menu-toggle {
+        display: none !important;
+      }
+
+      .sidebar-overlay {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">🎯</div>
+      <h3 class="sidebar-title">Panel</h3>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="/dashboard" class="nav-item" data-page="dashboard">
+        <span class="nav-icon">📊</span>
+        <span class="nav-text">Dashboard</span>
+      </a>
+      <a href="#" class="nav-item active" data-page="profile">
+        <span class="nav-icon">👤</span>
+        <span class="nav-text">Profilim</span>
+      </a>
+      <a href="/ayarlar" class="nav-item" data-page="settings">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-text">Ayarlar</span>
+      </a>
+      <a href="/messages" class="nav-item" data-page="messages">
+        <span class="nav-icon">💬</span>
+        <span class="nav-text">Mesajlar</span>
+      </a>
+      <a href="#" class="nav-item" data-page="analytics">
+        <span class="nav-icon">📈</span>
+        <span class="nav-text">Analitik</span>
+      </a>
+      <a href="#" class="nav-item" data-page="logout">
+        <span class="nav-icon">🚪</span>
+        <span class="nav-text">Çıkış</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-toggle" id="sidebarToggle">
+      <span>☰</span>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content" id="mainContent">
+    <div class="container">
+      <div class="header">
+        <h1>📊 Hesabım</h1>
+      </div>
+
+      <div class="profile-card">
+        <div class="profile-content">
+          <div class="profile-photo-section">
+            <div class="profile-photo-wrapper">
+              <img id="profilePhoto" class="profile-photo"
+                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ctext x='50' y='50' text-anchor='middle' dy='.3em' font-size='40' fill='%23999'%3E👤%3C/text%3E%3C/svg%3E"
+                alt="Profile">
+              <label class="upload-overlay" for="photoInput"></label>
+              <input type="file" id="photoInput" accept="image/*">
+            </div>
+          </div>
+
+          <div class="profile-info">
+            <div id="userContent" class="loading">
+              Yükleniyor...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="usersSection" class="users-card" style="display: none;">
+        <div class="users-header">
+          <h2>👥 Tüm Kullanıcılar</h2>
+          <span class="user-count" id="userCount">0 Kullanıcı</span>
+        </div>
+        <div id="allUsers" class="loading">f
+          Yükleniyor...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sidebar toggle functionality
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const mainContent = document.getElementById('mainContent');
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    // Desktop sidebar collapse
+    sidebarToggle.addEventListener('click', () => {
+      if (window.innerWidth > 768) {
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('expanded');
+      }
+    });
+
+    // Mobile menu toggle
+    if (mobileMenuToggle) {
+      mobileMenuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('active');
+        sidebarOverlay.classList.toggle('active');
+      });
+    }
+
+    // Close sidebar when overlay is clicked
+    if (sidebarOverlay) {
+      sidebarOverlay.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        sidebarOverlay.classList.remove('active');
+      });
+    }
+
+    // Navigation
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        // Remove active class from all items
+        navItems.forEach(nav => nav.classList.remove('active'));
+
+        // Add active class to clicked item
+        item.classList.add('active');
+
+        const page = item.getAttribute('data-page');
+
+        // Close mobile sidebar when navigating
+        if (window.innerWidth <= 768) {
+          sidebar.classList.remove('active');
+          sidebarOverlay.classList.remove('active');
+        }
+
+        // Handle different pages
+        if (page === 'profile') {
+          // Current page - do nothing or reload
+          console.log('Profile page');
+        } else if (page === 'logout') {
+          if (confirm('Çıkış yapmak istediğinize emin misiniz?')) {
+            window.location.href = '/login';
+          }
+        } else if (page === 'dashboard') {
+          window.location.href = '/dashboard';
+        } else if (page === 'settings') {
+          window.location.href = '/ayarlar';
+        } else if (page === 'messages') {
+          window.location.href = '/messages';
+        }
+        else {
+          alert(`${item.querySelector('.nav-text').textContent} sayfası geliştiriliyor...`);
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>
+
+<!-- Crop Modal -->
+<div id="cropModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>📷 Fotoğrafı Düzenle</h2>
+      <button class="close-modal" onclick="closeCropModal()">×</button>
+    </div>
+
+    <div class="crop-container" id="cropContainer">
+      <canvas id="cropCanvas" class="crop-canvas"></canvas>
+      <div class="crop-overlay"></div>
+    </div>
+
+    <div class="zoom-controls">
+      <label>🔍 Yakınlaştır:</label>
+      <input type="range" id="zoomSlider" class="zoom-slider" min="1" max="3" step="0.01" value="1">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeCropModal()">İptal</button>
+      <button class="btn btn-primary" onclick="saveCroppedPhoto()">💾 Kaydet</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

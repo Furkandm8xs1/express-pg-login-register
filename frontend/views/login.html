@@ -13,7 +13,7 @@
     
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #1569b8 0%, #1abb35 100%);
+      background: linear-gradient(135deg,#0b7a23 0%, #1a13d6 100%);
       min-height: 100vh;
       display: flex;
       justify-content: center;
@@ -22,7 +22,7 @@
     
     .container {
       background: white;
-      padding: 60px;
+      padding: 70px;
       border-radius: 10px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.2);
       width: 100%;
@@ -36,7 +36,7 @@
     }
     
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 50px;
     }
     
     label {
@@ -144,7 +144,7 @@
     </div>
   </div>
 
-  <script>
+<script>
 const form = document.getElementById('loginForm');
 const submitBtn = document.getElementById('submitBtn');
 const messageDiv = document.getElementById('message');
@@ -172,22 +172,27 @@ form.addEventListener('submit', async (e) => {
     if (res.ok) {
       showMessage('Giriş başarılı! Yönlendiriliyorsunuz...', 'success');
       
-      // Kullanıcı ID'sini kaydet
-      localStorage.setItem('userId', result.userId);
+     // login.html içindeki script kısmı
+
+if (result.token) {
+    const maxAge = 3600; 
+    // SameSite=Lax, kullanıcı login sonrası sayfaya yönlendirildiğinde cookie'nin gitmesini garantiye alır.
+    document.cookie = `token=${result.token}; path=/; max-age=${maxAge}; SameSite=Lax`; 
+    console.log('✅ Token cookie\'ye kaydedildi');
+}
       
-      // ⭐ BU SATIRI EKLEYİN ⭐
-      localStorage.setItem('isAdmin', result.isAdmin);
-      
-      // Dashboard'a yönlendir
+      // Profile sayfasına yönlendir (küçük bir delay ile)
       setTimeout(() => {
-        window.location.href = 'dashboard.html';
-      }, 1500);
+        window.location.href = '/profile';
+      }, 500);
+      
     } else {
       showMessage(result.error || 'Giriş başarısız', 'error');
       submitBtn.disabled = false;
       submitBtn.textContent = 'Giriş Yap';
     }
   } catch (error) {
+    console.error('Login error:', error);
     showMessage('Sunucuya bağlanılamadı', 'error');
     submitBtn.disabled = false;
     submitBtn.textContent = 'Giriş Yap';
@@ -199,6 +204,6 @@ function showMessage(text, type) {
   messageDiv.className = `message ${type}`;
   messageDiv.style.display = 'block';
 }
-  </script>
+</script>
 </body>
 </html>
