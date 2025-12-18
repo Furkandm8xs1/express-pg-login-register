@@ -1,0 +1,127 @@
+Elbette, web geliştirmede sıkça kullanılan CSS terimlerinin Türkçe karşılıklarını ve açıklamalarını aşağıda kategorilere ayrılmış bir şekilde bulabilirsiniz.
+
+Temel Kutu Modeli (Box Model)
+Bu terimler, bir HTML elemanının etrafındaki boşlukları ve boyutlarını kontrol eder.
+
+margin: Dış boşluk (Elemanın kenarlığı dışındaki boşluk)
+
+margin-top: Üst dış boşluk
+
+margin-right: Sağ dış boşluk
+
+margin-bottom: Alt dış boşluk
+
+margin-left: Sol dış boşluk
+
+padding: İç dolgu / İç boşluk (Elemanın kenarlığı ile içeriği arasındaki boşluk)
+
+padding-top: Üst iç dolgu
+
+padding-right: Sağ iç dolgu
+
+padding-bottom: Alt iç dolgu
+
+padding-left: Sol iç dolgu
+
+border: Kenarlık (Elemanı çevreleyen çizgi)
+
+border-width: Kenarlık kalınlığı
+
+border-style: Kenarlık stili (örn: solid - düz, dotted - noktalı, dashed - kesikli)
+
+border-color: Kenarlık rengi
+
+border-radius: Kenarlık yuvarlaklığı
+
+width: Genişlik
+
+height: Yükseklik
+
+box-sizing: Kutu boyutlandırma (content-box: varsayılan, border-box: en kullanışlısı)
+
+Yazı Tipi ve Metin (Typography & Text)
+font-family: Yazı tipi ailesi (örn: Arial, Times New Roman)
+
+font-size: Yazı tipi boyutu
+
+font-weight: Yazı tipi kalınlığı (örn: bold - kalın, normal - normal)
+
+font-style: Yazı tipi stili (örn: italic - eğik)
+
+color: Renk (Metin rengi)
+
+text-align: Metin hizalama (left - sola, right - sağa, center - ortaya, justify - iki yana yasla)
+
+text-decoration: Metin süslemesi (none - yok, underline - altı çizili, line-through - üstü çizili)
+
+text-transform: Metin dönüşümü (uppercase - büyük harf, lowercase - küçük harf, capitalize - ilk harf büyük)
+
+line-height: Satır yüksekliği
+
+letter-spacing: Harf aralığı
+
+word-spacing: Kelime aralığı
+
+Konumlandırma ve Yerleşim (Positioning & Layout)
+position: Konum (static - statik, relative - göreceli, absolute - mutlak, fixed - sabit, sticky - yapışkan)
+
+top: Üstten konum
+
+right: Sağdan konum
+
+bottom: Alttan konum
+
+left: Soldan konum
+
+display: Görüntüleme türü (block - blok, inline - satır içi, inline-block - satır içi blok, none - gizli, flex - esnek kutu, grid - ızgara)
+
+z-index: Katman sırası (Elemanların üst üste gelme sırası)
+
+float: Kaydırma (left - sola kaydır, right - sağa kaydır)
+
+clear: Temizle (Float etkisini temizler)
+
+overflow: Taşma (hidden - gizle, scroll - kaydırma çubuğu ekle, auto - otomatik, visible - göster)
+
+Flexbox Terimleri (Esnek Kutu Modeli)
+Modern ve esnek yerleşimler için kullanılır.
+
+flex-direction: Esnek yön (row - satır, column - sütun)
+
+justify-content: Ana eksende hizalama (Yatayda hizalama)
+
+align-items: Çapraz eksende hizalama (Dikeyde hizalama)
+
+flex-wrap: Öğeleri sarma (nowrap - sarma, wrap - sar)
+
+gap: Boşluk (Öğeler arasındaki boşluk)
+
+Arka Plan (Background)
+background-color: Arka plan rengi
+
+background-image: Arka plan resmi
+
+background-repeat: Arka plan tekrarı (no-repeat - tekrarlama, repeat-x - yatayda tekrarla, repeat-y - dikeyde tekrarla)
+
+background-position: Arka plan konumu
+
+background-size: Arka plan boyutu (cover - kapla, contain - sığdır)
+
+Diğer Önemli Terimler
+opacity: Opaklık / Şeffaflık (0 ile 1 arasında bir değer alır)
+
+visibility: Görünürlük (visible - görünür, hidden - gizli)
+
+cursor: İmleç (pointer - el işareti, default - varsayılan ok, text - metin imleci)
+
+transition: Geçiş (Bir özelliğin yumuşak bir şekilde değişmesini sağlar)
+
+transform: Dönüşüm (rotate - döndür, scale - ölçekle, translate - taşı)
+
+animation: Animasyon
+
+selector: Seçici (Stil uygulanacak HTML elemanını hedef alan kural. Örn: .class, #id, p)
+
+pseudo-class: Sözde sınıf (Elemanın özel bir durumunu belirtir. Örn: :hover - üzerine gelince)
+
+pseudo-element: Sözde eleman (Elemanın belirli bir bölümünü biçimlendirir. Örn: ::before - öncesine, ::after - sonrasına)

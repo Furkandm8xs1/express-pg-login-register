@@ -1,0 +1,750 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #455088 0%, #296e20 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    color: white;
+    font-size: 32px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.profile-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100px;
+    background: linear-gradient(135deg, #8bb663 0%, #15a899 100%);
+    z-index: 0;
+}
+
+.profile-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    gap: 30px;
+}
+
+.profile-photo-section {
+    flex-shrink: 0;
+}
+
+.profile-photo-wrapper {
+    position: relative;
+    width: 150px;
+    height: 150px;
+}
+
+.profile-photo {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid white;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    background: white;
+}
+
+.upload-overlay {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background: #667eea;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s;
+}
+
+.upload-overlay:hover {
+    transform: scale(1.1);
+}
+
+.upload-overlay::after {
+    content: '📷';
+    font-size: 20px;
+}
+
+#photoInput {
+    display: none;
+}
+
+.profile-info {
+    flex: 1;
+    padding-top: 20px;
+}
+
+.profile-name {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.profile-email {
+    color: #666;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.admin-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.info-item {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+}
+
+.info-value {
+    font-size: 16px;
+    color: #333;
+    font-weight: 600;
+}
+
+.actions {
+    margin-top: 30px;
+    display: flex;
+    gap: 15px;
+}
+
+.btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(245, 87, 108, 0.4);
+}
+
+.users-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.users-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.users-header h2 {
+    color: #333;
+    font-size: 24px;
+}
+
+.user-count {
+    background: #667eea;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #e1e1e1;
+}
+
+th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #555;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+tr:hover {
+    background: #f8f9fa;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e1e1e1;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #667eea;
+    color: white;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-admin {
+    background: #f5576c;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+
+.error-message {
+    background: #fee;
+    color: #c33;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.success-message {
+    background: #efe;
+    color: #3c3;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.delete-btn {
+    background: #ff4444;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.delete-btn:hover {
+    background: #cc0000;
+    transform: scale(1.05);
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-content {
+    position: relative;
+    margin: 50px auto;
+    padding: 30px;
+    background: white;
+    border-radius: 20px;
+    max-width: 500px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.modal-header h2 {
+    color: #333;
+    font-size: 24px;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 30px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.close-modal:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.crop-container {
+    position: relative;
+    width: 400px;
+    height: 400px;
+    margin: 20px auto;
+    background: #f5f5f5;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.crop-canvas {
+    position: absolute;
+    cursor: move;
+    max-width: none;
+}
+
+.crop-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: 300px;
+    border: 3px solid white;
+    border-radius: 50%;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.zoom-controls label {
+    font-weight: 600;
+    color: #555;
+    min-width: 60px;
+}
+
+.zoom-slider {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    outline: none;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.btn-secondary {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #d0d0d0;
+    transform: translateY(-2px);
+}
+
+/* ============================= */
+/* 📱 Modern Telefonlar için Responsive Tasarım */
+/* ============================= */
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+        background: linear-gradient(135deg, #455088 0%, #296e20 100%);
+        min-height: auto;
+    }
+
+    .container {
+        width: 100%;
+        padding: 0;
+        max-height: 100vh;
+        overflow-y: auto;
+    }
+
+    .header {
+        margin-bottom: 15px;
+    }
+
+    .header h1 {
+        font-size: 20px;
+        text-align: center;
+    }
+
+    .profile-card {
+        padding: 20px;
+        margin-bottom: 15px;
+        border-radius: 15px;
+    }
+
+    .profile-card::before {
+        height: 60px;
+    }
+
+    .profile-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 10px;
+    }
+
+    .profile-photo-wrapper {
+        width: 100px;
+        height: 100px;
+    }
+
+    .profile-photo {
+        width: 100px;
+        height: 100px;
+        border: 3px solid white;
+    }
+
+    .upload-overlay {
+        width: 32px;
+        height: 32px;
+        bottom: 2px;
+        right: 2px;
+    }
+
+    .upload-overlay::after {
+        font-size: 16px;
+    }
+
+    .profile-info {
+        padding-top: 5px;
+        width: 100%;
+    }
+
+    .profile-name {
+        font-size: 20px;
+        margin-bottom: 3px;
+    }
+
+    .profile-email {
+        font-size: 13px;
+        margin-bottom: 10px;
+    }
+
+    .admin-badge {
+        font-size: 12px;
+        padding: 5px 12px;
+        margin-bottom: 10px;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .info-item {
+        padding: 10px;
+        border-radius: 8px;
+    }
+
+    .info-label {
+        font-size: 10px;
+        margin-bottom: 3px;
+    }
+
+    .info-value {
+        font-size: 14px;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+        font-size: 14px;
+        padding: 10px 20px;
+    }
+
+    .actions {
+        flex-direction: column;
+        margin-top: 15px;
+        gap: 10px;
+    }
+
+    /* Kullanıcılar kartı */
+    .users-card {
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 15px;
+    }
+
+    .users-header {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .users-header h2 {
+        font-size: 18px;
+    }
+
+    .user-count {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+
+    /* Kullanıcı tablosu - Kart görünümü */
+    table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+        display: block;
+    }
+
+    table thead {
+        display: none;
+    }
+
+    table tr {
+        background: #f8f9fa;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 12px;
+        border: none;
+    }
+
+    table tr:hover {
+        background: #f8f9fa;
+    }
+
+    table td {
+        border: none;
+        padding: 6px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    table td:first-child {
+        justify-content: center;
+        margin-bottom: 8px;
+    }
+
+    table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #555;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    table td:first-child::before {
+        display: none;
+    }
+
+    .user-avatar {
+        width: 60px;
+        height: 60px;
+    }
+
+    .badge {
+        font-size: 11px;
+        padding: 4px 10px;
+    }
+
+    .delete-btn {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+
+    /* Modal ayarları */
+    .modal-content {
+        width: 95%;
+        padding: 15px;
+        margin: 20px auto;
+        border-radius: 15px;
+    }
+
+    .modal-header h2 {
+        font-size: 18px;
+    }
+
+    .crop-container {
+        width: 100%;
+        height: 280px;
+    }
+
+    .crop-overlay {
+        width: 200px;
+        height: 200px;
+        border: 2px solid white;
+    }
+
+    .zoom-controls {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .zoom-controls label {
+        font-size: 14px;
+        min-width: auto;
+    }
+
+    .zoom-slider {
+        height: 5px;
+    }
+
+    .modal-actions {
+        gap: 8px;
+        margin-top: 15px;
+    }
+
+    .modal-actions .btn {
+        font-size: 13px;
+        padding: 8px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header h1 {
+        font-size: 18px;
+    }
+
+    .profile-card {
+        padding: 15px;
+    }
+
+    .profile-name {
+        font-size: 18px;
+    }
+
+    .profile-photo-wrapper {
+        width: 90px;
+        height: 90px;
+    }
+
+    .profile-photo {
+        width: 90px;
+        height: 90px;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .crop-container {
+        height: 250px;
+    }
+
+    .crop-overlay {
+        width: 180px;
+        height: 180px;
+    }
+}
