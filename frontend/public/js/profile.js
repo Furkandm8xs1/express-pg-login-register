@@ -6,7 +6,7 @@ let isDragging = false;
 let dragStartX = 0;
 let dragStartY = 0;
 
-// --- JWT Decode Helper Function ---
+
 function parseJwt(token) {
     try {
         const base64Url = token.split('.')[1];

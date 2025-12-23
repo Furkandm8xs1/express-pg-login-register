@@ -6,30 +6,83 @@ let isDragging = false;
 let dragStartX = 0;
 let dragStartY = 0;
 
+// --- JWT ve Cookie Yardımcı Fonksiyonları ---
+function parseJwt(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error('JWT parse error:', e);
+        return null;
+    }
+}
 
+function getTokenFromCookie(name = 'token') {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
 
+function deleteCookie(name) {
+    document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+}
 
-if (!userId) {
+// --- Başlangıç Kontrolleri ---
+
+// 1. Token'ı al
+const token = getTokenFromCookie();
+
+// 2. Token yoksa login'e at
+if (!token) {
     window.location.href = '/login';
 }
 
+// 3. Token'ı çöz ve verileri al
+const decodedToken = parseJwt(token);
+if (!decodedToken || !decodedToken.id) {
+    window.location.href = '/login';
+}
+
+const userId = decodedToken.id;
+const userEmail = decodedToken.email;
+// Backend /user/:id endpoint'inde is_admin bilgisini dönmediği için
+// yetki bilgisini doğrudan Token'dan alıyoruz.
+const isAdmin = decodedToken.isAdmin || false;
+
+// --- Ana Fonksiyonlar ---
+
 async function loadUserInfo() {
     try {
-        const res = await fetch(`http://localhost:3000/user/${userId}?requesterId=${userId}`);
+        const res = await fetch(`http://localhost:3000/user/${userId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        // Backend 404 veya 500 dönerse
+        if (!res.ok) {
+             if (res.status === 403) throw new Error('Yetkisiz Erişim');
+             throw new Error('Kullanıcı bilgileri alınamadı');
+        }
+
         const user = await res.json();
 
-        if (res.ok) {
-            if (user.profile_photo) {
-                document.getElementById('profilePhoto').src = user.profile_photo;
-            }
+        if (user.profile_photo) {
+            document.getElementById('profilePhoto').src = user.profile_photo;
+        }
 
-            // is_admin bilgisi sadece admin için gelir, normal kullanıcı için undefined olur
-            const userIsAdmin = user.is_admin || false;
-
-            document.getElementById('userContent').innerHTML = `
+        // Kullanıcı arayüzünü doldur
+        document.getElementById('userContent').innerHTML = `
           <h2 class="profile-name">${user.username}</h2>
           <p class="profile-email">${user.email}</p>
-          ${userIsAdmin ? '<span class="admin-badge">👑 Admin</span>' : ''}
+          ${isAdmin ? '<span class="admin-badge">👑 Admin</span>' : ''}
           
           <div class="info-grid">
             <div class="info-item">
@@ -46,7 +99,7 @@ async function loadUserInfo() {
             </div>
             <div class="info-item">
               <div class="info-label">Yetki Seviyesi</div>
-              <div class="info-value">${userIsAdmin ? '👑 Admin' : '👤 Kullanıcı'}</div>
+              <div class="info-value">${isAdmin ? '👑 Admin' : '👤 Kullanıcı'}</div>
             </div>
           </div>
           
@@ -56,34 +109,18 @@ async function loadUserInfo() {
           </div>
         `;
 
-            // LocalStorage'daki isAdmin bilgisini backend'den gelen ile senkronize et
-            if (userIsAdmin) {
-                localStorage.setItem('isAdmin', 'true');
-                document.getElementById('usersSection').style.display = 'block';
-                loadAllUsers();
-            } else {
-                localStorage.setItem('isAdmin', 'false');
-                document.getElementById('usersSection').style.display = 'none';
-            }
-        } else if (res.status === 403) {
-            document.getElementById('userContent').innerHTML = `
-          <div class="error-message">Bu bilgilere erişim yetkiniz yok</div>
-          <div class="actions">
-            <button class="btn btn-danger" onclick="logout()">🚪 Çıkış Yap</button>
-          </div>
-        `;
+        // Eğer kullanıcı Admin ise (Token'dan gelen bilgiye göre) paneli aç
+        if (isAdmin) {
+            document.getElementById('usersSection').style.display = 'block';
+            loadAllUsers();
         } else {
-            document.getElementById('userContent').innerHTML = `
-          <div class="error-message">Kullanıcı bilgileri yüklenemedi</div>
-          <div class="actions">
-            <button class="btn btn-danger" onclick="logout()">🚪 Çıkış Yap</button>
-          </div>
-        `;
+            document.getElementById('usersSection').style.display = 'none';
         }
+
     } catch (error) {
         console.error('Load user error:', error);
         document.getElementById('userContent').innerHTML = `
-        <div class="error-message">Sunucuya bağlanılamadı</div>
+        <div class="error-message">${error.message || 'Sunucuya bağlanılamadı'}</div>
         <div class="actions">
           <button class="btn btn-danger" onclick="logout()">🚪 Çıkış Yap</button>
         </div>
@@ -93,15 +130,17 @@ async function loadUserInfo() {
 
 async function loadAllUsers() {
     try {
-        const res = await fetch(`http://localhost:3000/users?requesterId=${userId}`);
+        // GÜNCELLEME: Header eklendi. Backend verifyToken middleware kullanıyor.
+        const res = await fetch(`http://localhost:3000/users`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
 
         if (res.status === 403) {
             document.getElementById('allUsers').innerHTML = '<div class="error-message">Bu sayfayı görüntülemek için admin yetkisi gerekli</div>';
-            return;
-        }
-
-        if (res.status === 400) {
-            document.getElementById('allUsers').innerHTML = '<div class="error-message">Geçersiz istek</div>';
             return;
         }
 
@@ -129,6 +168,7 @@ async function loadAllUsers() {
                 const isCurrentUser = user.id == userId;
                 const photoSrc = user.profile_photo || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ctext x='50' y='50' text-anchor='middle' dy='.3em' font-size='40' fill='%23999'%3E👤%3C/text%3E%3C/svg%3E";
 
+                // Backend /users endpoint'inde is_admin dönüyor, burada kullanabiliriz.
                 html += `
             <tr style="${isCurrentUser ? 'background: #e7f3ff;' : ''}">
               <td><img src="${photoSrc}" class="user-avatar" alt="${user.username}"></td>
@@ -157,14 +197,15 @@ async function loadAllUsers() {
     }
 }
 
+// --- Fotoğraf Yükleme ve Kırpma İşlemleri (Değişmedi, sadece Save güncellendi) ---
+
 document.getElementById('photoInput').addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Dosya tipi kontrolü
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-        alert('❌ Geçersiz dosya formatı. Sadece JPG, PNG, GIF, WEBP desteklenir.');
+        alert('❌ Geçersiz dosya formatı.');
         e.target.value = '';
         return;
     }
@@ -182,22 +223,17 @@ document.getElementById('photoInput').addEventListener('change', (e) => {
             currentImage = img;
             openCropModal();
         };
-        img.onerror = () => {
-            alert('❌ Resim yüklenemedi. Lütfen geçerli bir resim dosyası seçin.');
-            e.target.value = '';
-        };
         img.src = event.target.result;
     };
     reader.readAsDataURL(file);
-
     e.target.value = '';
 });
 
 function openCropModal() {
     const modal = document.getElementById('cropModal');
     const canvas = document.getElementById('cropCanvas');
-    const ctx = canvas.getContext('2d');
-    const container = document.getElementById('cropContainer');
+    // const ctx = canvas.getContext('2d'); // Kullanılmıyorsa kaldırılabilir
+    // const container = document.getElementById('cropContainer'); // Kullanılmıyorsa kaldırılabilir
 
     const containerSize = 400;
     canvas.width = containerSize;
@@ -209,7 +245,6 @@ function openCropModal() {
     imageY = (containerSize - currentImage.height * scale) / 2;
 
     document.getElementById('zoomSlider').value = 1;
-
     modal.style.display = 'block';
     drawImage();
     setupCropControls();
@@ -223,16 +258,9 @@ function closeCropModal() {
 function drawImage() {
     const canvas = document.getElementById('cropCanvas');
     const ctx = canvas.getContext('2d');
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
-    ctx.drawImage(
-        currentImage,
-        imageX,
-        imageY,
-        currentImage.width * imageScale,
-        currentImage.height * imageScale
-    );
+    ctx.drawImage(currentImage, imageX, imageY, currentImage.width * imageScale, currentImage.height * imageScale);
     ctx.restore();
 }
 
@@ -255,31 +283,21 @@ function setupCropControls() {
         drawImage();
     };
 
-    canvas.onmouseup = () => {
-        isDragging = false;
-    };
-
-    canvas.onmouseleave = () => {
-        isDragging = false;
-    };
+    canvas.onmouseup = () => { isDragging = false; };
+    canvas.onmouseleave = () => { isDragging = false; };
 
     zoomSlider.oninput = (e) => {
         const containerSize = 400;
         const baseScale = Math.max(containerSize / currentImage.width, containerSize / currentImage.height);
         const zoomFactor = parseFloat(e.target.value);
         const newScale = baseScale * zoomFactor;
-
         const centerX = containerSize / 2;
         const centerY = containerSize / 2;
-
         const imageCenterX = (centerX - imageX) / imageScale;
         const imageCenterY = (centerY - imageY) / imageScale;
-
         imageScale = newScale;
-
         imageX = centerX - (imageCenterX * imageScale);
         imageY = centerY - (imageCenterY * imageScale);
-
         drawImage();
     };
 }
@@ -298,35 +316,29 @@ async function saveCroppedPhoto() {
     const cropX = (containerSize - cropSize) / 2;
     const cropY = (containerSize - cropSize) / 2;
 
-    ctx.drawImage(
-        canvas,
-        cropX, cropY, cropSize, cropSize,
-        0, 0, size, size
-    );
-
+    ctx.drawImage(canvas, cropX, cropY, cropSize, cropSize, 0, 0, size, size);
     const photoUrl = outputCanvas.toDataURL('image/jpeg', 0.9);
 
     try {
-        const res = await fetch(`http://localhost:3000/user/${userId}/photo?requesterId=${userId}`, {
+        // GÜNCELLEME: Backend query string (requesterId) beklemiyor, URL temizlendi.
+        const res = await fetch(`http://localhost:3000/user/${userId}/photo`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ photoUrl, requesterId: userId })
+            headers: {
+                'Authorization': `Bearer ${token}`, // Token Header'a eklendi
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ photoUrl }) // Backend sadece photoUrl bekliyor
         });
 
         const data = await res.json();
 
         if (res.ok) {
             document.getElementById('profilePhoto').src = photoUrl;
-            const storedIsAdmin = localStorage.getItem('isAdmin') === 'true';
-            if (storedIsAdmin) loadAllUsers();
+            if (isAdmin) loadAllUsers(); // Admin ise listeyi güncelle
             closeCropModal();
             alert('✅ Profil fotoğrafı başarıyla güncellendi!');
-        } else if (res.status === 403) {
-            alert('❌ Bu işlem için yetkiniz yok');
-        } else if (res.status === 400) {
-            alert('❌ ' + (data.error || 'Geçersiz fotoğraf formatı'));
         } else {
-            alert('❌ Fotoğraf yüklenemedi: ' + (data.error || 'Bilinmeyen hata'));
+            alert('❌ ' + (data.error || 'Hata oluştu'));
         }
     } catch (error) {
         console.error('Save photo error:', error);
@@ -340,8 +352,13 @@ async function deleteUser(deleteUserId) {
     }
 
     try {
-        const res = await fetch(`http://localhost:3000/user/${deleteUserId}?requesterId=${userId}`, {
-            method: 'DELETE'
+        // GÜNCELLEME: Authorization header eklendi
+        const res = await fetch(`http://localhost:3000/user/${deleteUserId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
         });
 
         const data = await res.json();
@@ -349,14 +366,8 @@ async function deleteUser(deleteUserId) {
         if (res.ok) {
             alert('✅ Kullanıcı başarıyla silindi');
             loadAllUsers();
-        } else if (res.status === 403) {
-            alert('❌ Bu işlem için admin yetkisi gerekli');
-        } else if (res.status === 400) {
-            alert('❌ ' + (data.error || 'Geçersiz işlem'));
-        } else if (res.status === 404) {
-            alert('❌ Kullanıcı bulunamadı');
         } else {
-            alert('❌ ' + (data.error || 'Kullanıcı silinemedi'));
+            alert('❌ ' + (data.error || 'Silme işlemi başarısız'));
         }
     } catch (error) {
         console.error('Delete user error:', error);
@@ -365,9 +376,9 @@ async function deleteUser(deleteUserId) {
 }
 
 function logout() {
-
-    
+    deleteCookie('token'); // Çerez silme fonksiyonu eklendi
     window.location.href = '/login';
 }
 
+// Sayfa yüklendiğinde başlat
 loadUserInfo();

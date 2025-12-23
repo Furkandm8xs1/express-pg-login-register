@@ -6,7 +6,6 @@ const { Pool } = require('pg');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const path = require('path');
-
 // dikkat et bu kod içinde inline js kullanıyoruz frontendde bu yüzden helmet i devre dışı bırakıyoruz
 
 const app = express();
@@ -56,7 +55,7 @@ const messageRoutes = require('./routes/messages')(pool);
 app.use('/', pageRoutes);
 // api route'larını dahil et
 app.use('/', authRoutes);
-app.use('/', userRoutes);
+app.use('/', userRoutes);  
 // Reset-password route'larını dahil et (pool'u parametre olarak geç)
 app.use('/', resetPasswordRoutes);
 // mesajlar sayfası route'larını dahil et (pool'u parametre olarak geç)

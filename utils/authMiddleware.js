@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-here';
 
@@ -69,7 +70,35 @@ const requirePageAuth = (req, res, next) => {
   catch (error) {
       return res.redirect('/login');
   }
-  next();
+};
+
+
+
+// 1. Zaten giriş yapmışsa Login/Register sayfasına sokma, Dashboard'a at
+const redirectIfLoggedIn = (req, res, next) => {
+    const token = req.cookies.token; 
+    if (token) {
+        return res.redirect('/profile');
+    }
+    next();
+};
+
+// 2. Sadece Adminlerin görebileceği sayfalar için (Page versiyonu)
+const requireAdminPage = (req, res, next) => {
+    const token = req.cookies.token;
+    if (!token) return res.redirect('/login');
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (!decoded.isAdmin) {
+            // Giriş yapmış ama Admin değilse Dashboard'a geri gönder
+            return res.redirect('/'); 
+        }
+        req.user = decoded;
+        next();
+    } catch (error) {
+        return res.redirect('/login');
+    }
 };
 
 
@@ -77,5 +106,7 @@ module.exports = {
   verifyToken,
   requireAdmin,
   requireOwnerOrAdmin,
-  requirePageAuth
+  requirePageAuth,
+  redirectIfLoggedIn,
+  requireAdminPage
 };

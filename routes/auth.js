@@ -3,11 +3,14 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const { generateToken } = require('../utils/jwt');
-const { get } = require('./pages');
+
 
 
 module.exports = (pool) => {
   const router = express.Router();
+
+
+  
 
   // Rate limiting middleware - Brute force saldırılarına karşı
   const authLimiter = rateLimit({
@@ -18,37 +21,38 @@ module.exports = (pool) => {
     legacyHeaders: false,
   });
 
-  // Input validation middleware
+ 
+  
   const validateRegisterInput = (req, res, next) => {
     const { username, email, password, birthdate } = req.body;
 
-    // Boş alan kontrolü
+    
     if (!username || !email || !password || !birthdate) {
       return res.status(400).json({ error: "Tüm alanlar gereklidir" });
     }
 
-    // Username validasyonu
+   
     if (username.length < 3 || username.length > 50) {
       return res.status(400).json({ error: "Kullanıcı adı 3-50 karakter arasında olmalıdır" });
     }
 
-    // Email validasyonu
+    
     const cleanEmail = email.trim().toLowerCase();
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     if (!emailRegex.test(cleanEmail)) {
       return res.status(400).json({ error: "Geçerli bir email adresi giriniz" });
     }
 
-    // Password validasyonu
+    
     if (password.length < 8) {
       return res.status(400).json({ error: "Şifre en az 8 karakter olmalıdır" });
     }
 
-    // XSS koruması - tehlikeli karakterleri temizle
+ 
     req.body.username = username.trim().replace(/[<>]/g, '');
     req.body.email = cleanEmail;
 
-    // Birthdate validasyonu
+   
     const date = new Date(birthdate);
     if (isNaN(date.getTime())) {
       return res.status(400).json({ error: "Geçerli bir doğum tarihi giriniz" });
@@ -64,14 +68,13 @@ module.exports = (pool) => {
       return res.status(400).json({ error: "Email ve şifre gereklidir" });
     }
 
-    // Email format kontrolü
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
 
     if (!emailRegex.test(email.trim())) {
       return res.status(400).json({ error: "Geçerli bir email adresi giriniz" });
     }
 
-    // Email'i normalize et
+    
     req.body.email = email.trim().toLowerCase();
 
     next();
@@ -82,7 +85,7 @@ module.exports = (pool) => {
     const { username, email, password, birthdate } = req.body;
 
     try {
-      // Email kontrolü
+      
       const checkEmail = await pool.query(
         'SELECT id FROM users WHERE email = $1',
         [email]

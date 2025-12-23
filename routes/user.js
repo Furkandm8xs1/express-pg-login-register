@@ -80,7 +80,11 @@ module.exports = function (pool) {
   });
 
   // TÜM KULLANICILARI LİSTELE (SADECE ADMİN)
-  router.get("/users", verifyToken, requireAdmin, async (req, res) => {
+  router.get("/users", verifyToken, requireAdmin,  async (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+   
     try {
       const result = await pool.query(
         'SELECT id, username, email, created_at, is_admin, profile_photo FROM users ORDER BY id ASC'

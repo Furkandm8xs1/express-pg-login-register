@@ -8,6 +8,7 @@
   <script src="/js/func.js"></script>
   <script src="/js/sidebarhover.js"></script>
   <script src="/js/profile.js" defer> </script>
+  
   <title>Hesabım</title>
   <style>
     * {
@@ -83,6 +84,8 @@
       overflow-y: auto;
     }
 
+
+
     .nav-item {
       display: flex;
       align-items: center;
@@ -107,6 +110,12 @@
       transition: height 0.3s;
       border-radius: 0 4px 4px 0;
     }
+    .profile-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%; /* Yuvarlak yapar */
+    object-fit: cover; /* Resmi ezilmeden sığdırır */
+}
 
     .nav-item:hover,
     .nav-item.active {
@@ -271,8 +280,8 @@
 
     <nav class="sidebar-nav">
       <a href="/dashboard" class="nav-item" data-page="dashboard">
-        <span class="nav-icon">📊</span>
-        <span class="nav-text">Dashboard</span>
+        <span class="nav-icon"><img src="/png/spotifylogo.png" alt="Şirket Logosu" class="profile-img"></span>
+        <span class="nav-text">Spotify analytics</span>
       </a>
       <a href="#" class="nav-item active" data-page="profile">
         <span class="nav-icon">👤</span>
