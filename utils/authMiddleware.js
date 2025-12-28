@@ -1,28 +1,47 @@
 const jwt = require('jsonwebtoken');
-const cookieParser = require('cookie-parser');
+
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-here';
 
-// JWT token'ı doğrulama middleware'i
 const verifyToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+
+  let token = req.cookies?.token;
+
+  if (!token && req.headers.cookie) {
+    console.log("⚠️ Cookie-parser bulamadı, manuel aranıyor...");
+    const rawCookies = req.headers.cookie.split(';');
+    const tokenCookie = rawCookies.find(c => c.trim().startsWith('token='));
+    if (tokenCookie) {
+      token = tokenCookie.split('=')[1];
+    }
+  }
+
+  if (!token && req.headers.authorization) {
+    const parts = req.headers.authorization.split(' ');
+    if (parts.length === 2 && parts[0] === 'Bearer') {
+      token = parts[1];
+    }
+  }
+
+
 
   if (!token) {
-    return res.status(401).json({ error: "Token bulunamadı" });
+    return res.status(401).json({ error: 'Token bulunamadı! Lütfen tekrar giriş yapın.' });
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // { id, email, isAdmin }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    console.log("✅ Kullanıcı Doğrulandı:", req.user.username || req.user.email);
     next();
-  } catch (error) {
-    console.error('Token verification error:', error);
-    return res.status(403).json({ error: "Geçersiz veya süresi dolmuş token" });
+  } catch (err) {
+    console.log("❌ Token Hatası:", err.message);
+    return res.status(403).json({ error: 'Token geçersiz veya süresi dolmuş.' });
   }
 };
 
-// Admin kontrolü middleware'i
+
 const requireAdmin = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: "Kimlik doğrulama gerekli" });
@@ -35,7 +54,6 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
-// Kullanıcı yetkisi kontrolü (kendi profili veya admin)
 const requireOwnerOrAdmin = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: "Kimlik doğrulama gerekli" });
@@ -59,16 +77,16 @@ const requirePageAuth = (req, res, next) => {
   const token = req.cookies.token;
 
   if (!token) {
-      return res.redirect('/login');
+    return res.redirect('/login');
   }
 
   try {
-      const decoded = jwt.verify(token, JWT_SECRET);
-      req.user = decoded;
-      next();
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
   }
   catch (error) {
-      return res.redirect('/login');
+    return res.redirect('/login');
   }
 };
 
@@ -76,29 +94,29 @@ const requirePageAuth = (req, res, next) => {
 
 // 1. Zaten giriş yapmışsa Login/Register sayfasına sokma, Dashboard'a at
 const redirectIfLoggedIn = (req, res, next) => {
-    const token = req.cookies.token; 
-    if (token) {
-        return res.redirect('/profile');
-    }
-    next();
+  const token = req.cookies.token;
+  if (token) {
+    return res.redirect('/profile');
+  }
+  next();
 };
 
 // 2. Sadece Adminlerin görebileceği sayfalar için (Page versiyonu)
 const requireAdminPage = (req, res, next) => {
-    const token = req.cookies.token;
-    if (!token) return res.redirect('/login');
+  const token = req.cookies.token;
+  if (!token) return res.redirect('/login');
 
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        if (!decoded.isAdmin) {
-            // Giriş yapmış ama Admin değilse Dashboard'a geri gönder
-            return res.redirect('/'); 
-        }
-        req.user = decoded;
-        next();
-    } catch (error) {
-        return res.redirect('/login');
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded.isAdmin) {
+      // Giriş yapmış ama Admin değilse Dashboard'a geri gönder
+      return res.redirect('/');
     }
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.redirect('/login');
+  }
 };
 
 

@@ -18,7 +18,7 @@ router.get("/login", redirectIfLoggedIn, (req, res) => {
 });
 
 // Register sayfası
-router.get("/register", redirectIfLoggedIn , (req, res) => {
+router.get("/register", redirectIfLoggedIn, (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/views/register.html"));
 });
 
@@ -34,17 +34,17 @@ router.get("/dashboard", requirePageAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/views/dashboard.html"));
 });
 
-router.get("/ayarlar",  requirePageAuth, (req, res) => {
+router.get("/ayarlar", requirePageAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/views/ayarlar.html"));
 });
 
 // Reset password sayfası
-router.get("/reset-password", requirePageAuth,(req, res) => {
+router.get("/reset-password", requirePageAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/views/reset-password.html"));
 });
 
 // Forgot password sayfası
-router.get("/forgot-password",  requirePageAuth, (req, res) => {
+router.get("/forgot-password", requirePageAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/views/forgot-password.html"));
 });
 
@@ -53,10 +53,16 @@ router.get("/messages", requirePageAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/views/mesajlar.html"));
 });
 // Messages sayfası
-router.get("/admin",  requireAdminPage , (req, res) => {
+router.get("/admin", requireAdminPage, (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/views/admin.html"));
 });
 
+router.get("/receipt", requirePageAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/views/my-receipts.html"));
+});
 
+router.get("/my-receipts", requirePageAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/views/my-receipts.html"));
+});
 
 module.exports = router;

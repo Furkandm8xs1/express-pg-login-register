@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fişlerim - Akıllı Fiş Analiz Sistemi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/css/my-receipts.css">
+    <style>
+        .receipts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .receipt-card {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: 0.3s;
+            border-left: 5px solid var(--primary);
+        }
+
+        .receipt-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .receipt-card h3 {
+            color: var(--secondary);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .receipt-card .meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .receipt-card .amount {
+            font-size: 1.3rem;
+            color: var(--primary);
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .receipt-card .items-count {
+            background: #f0f0f0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        .upload-container {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .drop-zone {
+            border: 2px dashed #ccc;
+            padding: 40px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .drop-zone:hover {
+            border-color: var(--primary);
+            background: #f8f8ff;
+        }
+
+        .drop-zone i {
+            font-size: 3rem;
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+
+        .file-name {
+            margin: 15px 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .btn-primary,
+        .btn-action {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .btn-action:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loader-container {
+            margin-top: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .receipt-result {
+            margin-top: 30px;
+            background: #eefcf3;
+            border: 1px solid #c3e6cb;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .total-row {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            color: var(--secondary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-card .icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .bg-purple { background: #6C63FF; }
+        .bg-blue { background: #4D96FF; }
+        .bg-orange { background: #FF9F43; }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .chart-container {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .recent-list {
+            list-style: none;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .recent-list li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .recent-list li span.price {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: var(--white);
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideDown 0.3s;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            color: var(--secondary);
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #666;
+            transition: 0.3s;
+        }
+
+        .close-btn:hover {
+            color: var(--primary);
+        }
+
+        .receipt-detail {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .receipt-detail label {
+            font-weight: bold;
+            color: var(--secondary);
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .receipt-detail p {
+            color: #666;
+            margin: 0;
+        }
+
+        /* YENİ: Düzenleme alanları için stil */
+        .edit-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .edit-input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+
+        .edit-input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .items-list {
+            margin-top: 20px;
+        }
+
+        .item-edit-row {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 2fr auto auto auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .item-edit-row .item-name {
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        .item-edit-row .item-name:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .quantity-edit {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .quantity-input {
+            width: 70px;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.95rem;
+            font-weight: bold;
+        }
+
+        .quantity-input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .item-edit-row .price {
+            color: var(--primary);
+            font-weight: bold;
+            min-width: 80px;
+            text-align: right;
+            font-size: 0.95rem;
+        }
+
+        .btn-save-item {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: 0.3s;
+            white-space: nowrap;
+        }
+
+        .btn-save-item:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .search-box {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        .search-box button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .search-box button:hover {
+            opacity: 0.9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--primary);
+        }
+
+        .spinner-small {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            .item-edit-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h2>🧾 Fiş<span class="highlight">Al</span></h2>
+            </div>
+            <ul class="menu">
+                <li class="active" onclick="switchTab('upload')">
+                    <i class="fas fa-cloud-upload-alt"></i> Fiş Yükle
+                </li>
+                <li onclick="switchTab('receipts')">
+                    <i class="fas fa-list"></i> Fişlerim
+                </li>
+                <li onclick="switchTab('dashboard')">
+                    <i class="fas fa-chart-pie"></i> Analizler
+                </li>
+                <li onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Çıkış
+                </li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <!-- UPLOAD SEKMESİ -->
+            <div id="upload-section" class="section active">
+                <header>
+                    <h1>Yeni Fiş Ekle</h1>
+                    <p>Yapay zeka ile fişinizi saniyeler içinde analiz edin.</p>
+                </header>
+
+                <div class="upload-container">
+                    <div class="drop-zone" id="dropZone">
+                        <i class="fas fa-file-image"></i>
+                        <p>Resmi buraya sürükleyin veya seçin</p>
+                        <input type="file" id="fileInput" accept="image/*" hidden>
+                        <button class="btn-primary" onclick="document.getElementById('fileInput').click()">Dosya Seç</button>
+                    </div>
+                    <p id="fileName" class="file-name"></p>
+
+                    <button id="scanBtn" class="btn-action" onclick="uploadReceipt()" disabled>
+                        <i class="fas fa-magic"></i> Analiz Et ve Kaydet
+                    </button>
+
+                    <div class="loader-container" id="loader" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Yapay zeka fişi okuyor, lütfen bekleyin...</p>
+                    </div>
+                </div>
+
+                <div id="resultCard" class="receipt-result" style="display: none;">
+                    <h3>✅ İşlem Başarılı!</h3>
+                    <div class="receipt-details" id="receiptDetails"></div>
+                </div>
+            </div>
+
+            <!-- FİŞLERİM SEKMESİ -->
+            <div id="receipts-section" class="section" style="display: none;">
+                <header>
+                    <h1>Tüm Fişlerim</h1>
+                    <p>Fişlerinizi yönetin, mağaza adı, ürün ismi ve adetlerini düzenleyin.</p>
+                </header>
+
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Mağaza adı veya tarih ile ara...">
+                    <button onclick="searchReceipts()">Ara</button>
+                </div>
+
+                <div id="loading" class="loading" style="display: none;">
+                    <div class="spinner-small"></div>
+                    <p>Fişler yükleniyor...</p>
+                </div>
+
+                <div id="receiptsContainer" class="receipts-container"></div>
+
+                <div id="emptyState" class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>Henüz fiş yüklenmemiş.</p>
+                </div>
+            </div>
+
+            <!-- DASHBOARD SEKMESİ -->
+            <div id="dashboard-section" class="section" style="display: none;">
+                <header>
+                    <h1>Harcama Özetiniz</h1>
+                    <p>Tüm harcamalarınızın grafiksel analizi.</p>
+                </header>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="icon bg-purple"><i class="fas fa-wallet"></i></div>
+                        <div class="info">
+                            <h3>Toplam Harcama</h3>
+                            <p id="totalSpent">0 ₺</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon bg-blue"><i class="fas fa-receipt"></i></div>
+                        <div class="info">
+                            <h3>Fiş Sayısı</h3>
+                            <p id="totalReceipts">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon bg-orange"><i class="fas fa-store"></i></div>
+                        <div class="info">
+                            <h3>En Çok Gidilen</h3>
+                            <p id="topMerchant">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3>Mağazaya Göre Dağılım</h3>
+                        <canvas id="merchantChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Son Harcamalar</h3>
+                        <ul class="recent-list" id="recentList"></ul>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Fiş Detay Modal -->
+    <div id="receiptModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Fiş Detayları</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+
+            <!-- YENİ: Mağaza Adı Düzenleme -->
+            <div class="receipt-detail">
+                <label><i class="fas fa-store"></i> Mağaza Adı</label>
+                <div class="edit-row" id="modalMerchantEdit"></div>
+            </div>
+
+            <div class="receipt-detail">
+                <label><i class="fas fa-calendar-alt"></i> Tarih ve Saat</label>
+                <p id="modalDateTime">-</p>
+            </div>
+
+            <div class="receipt-detail">
+                <label><i class="fas fa-money-bill-wave"></i> Toplam Tutar</label>
+                <p id="modalTotal" style="font-size: 1.3rem; color: var(--primary); font-weight: bold;">-</p>
+            </div>
+
+            <!-- Ürünler Listesi (İsim ve Adet Düzenleme) -->
+            <div class="items-list">
+                <label style="margin-bottom: 15px; display: block;">
+                    <i class="fas fa-box"></i> <strong>Ürünler (İsim ve Adet Düzenlenebilir)</strong>
+                </label>
+                <div id="modalItems"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/my-receipts.js"></script>
+</body>
+
+</html>

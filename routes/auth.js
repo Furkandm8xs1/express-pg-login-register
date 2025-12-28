@@ -10,7 +10,7 @@ module.exports = (pool) => {
   const router = express.Router();
 
 
-  
+
 
   // Rate limiting middleware - Brute force saldırılarına karşı
   const authLimiter = rateLimit({
@@ -21,38 +21,38 @@ module.exports = (pool) => {
     legacyHeaders: false,
   });
 
- 
-  
+
+
   const validateRegisterInput = (req, res, next) => {
     const { username, email, password, birthdate } = req.body;
 
-    
+
     if (!username || !email || !password || !birthdate) {
       return res.status(400).json({ error: "Tüm alanlar gereklidir" });
     }
 
-   
+
     if (username.length < 3 || username.length > 50) {
       return res.status(400).json({ error: "Kullanıcı adı 3-50 karakter arasında olmalıdır" });
     }
 
-    
+
     const cleanEmail = email.trim().toLowerCase();
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     if (!emailRegex.test(cleanEmail)) {
       return res.status(400).json({ error: "Geçerli bir email adresi giriniz" });
     }
 
-    
+
     if (password.length < 8) {
       return res.status(400).json({ error: "Şifre en az 8 karakter olmalıdır" });
     }
 
- 
+
     req.body.username = username.trim().replace(/[<>]/g, '');
     req.body.email = cleanEmail;
 
-   
+
     const date = new Date(birthdate);
     if (isNaN(date.getTime())) {
       return res.status(400).json({ error: "Geçerli bir doğum tarihi giriniz" });
@@ -74,7 +74,7 @@ module.exports = (pool) => {
       return res.status(400).json({ error: "Geçerli bir email adresi giriniz" });
     }
 
-    
+
     req.body.email = email.trim().toLowerCase();
 
     next();
@@ -85,7 +85,7 @@ module.exports = (pool) => {
     const { username, email, password, birthdate } = req.body;
 
     try {
-      
+
       const checkEmail = await pool.query(
         'SELECT id FROM users WHERE email = $1',
         [email]
@@ -106,7 +106,7 @@ module.exports = (pool) => {
       );
 
       const user = result.rows[0];
-     
+
 
       res.status(201).json({
         message: "Kayıt başarılı",
@@ -144,13 +144,13 @@ module.exports = (pool) => {
       }
 
       const tokenPayload = {
-            id: user.id,
-            email: user.email,
-            username: user.username,
-            isAdmin: user.is_admin
-        };
-        
-        const token = generateToken(tokenPayload);
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        isAdmin: user.is_admin
+      };
+
+      const token = generateToken(tokenPayload);
 
 
 

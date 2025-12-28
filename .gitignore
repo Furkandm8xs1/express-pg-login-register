@@ -1,5 +1,19 @@
 node_modules/
 .env
+.env.local
 .vscode/
 package-lock.json
 package.json
+
+# Lokal dosya yüklemeleri (artık kullanılmıyor, R2 kullanılıyor)
+uploads/
+*.jpg
+*.png
+*.jpeg
+
+# IDE
+.DS_Store
+.idea/
+*.swp
+*.swo
+.env.example

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akıllı Fiş Analiz Sistemi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/css/receipt.css">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h2>🧾 Fiş<span class="highlight">Al</span></h2>
+            </div>
+            <ul class="menu">
+                <li class="active" onclick="switchTab('upload')">
+                    <i class="fas fa-cloud-upload-alt"></i> Fiş Yükle
+                </li>
+                <li onclick="switchTab('dashboard')">
+                    <i class="fas fa-chart-pie"></i> Analizler
+                </li>
+                <li onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Çıkış
+                </li>
+            </ul>
+        </nav>
+
+        <main class="content">
+
+            <div id="upload-section" class="section active">
+                <header>
+                    <h1>Yeni Fiş Ekle</h1>
+                    <p>Yapay zeka ile fişinizi saniyeler içinde analiz edin.</p>
+                </header>
+
+                <div class="upload-container">
+                    <div class="drop-zone" id="dropZone">
+                        <i class="fas fa-file-image"></i>
+                        <p>Resmi buraya sürükleyin veya seçin</p>
+                        <input type="file" id="fileInput" accept="image/*" hidden>
+                        <button class="btn-primary" onclick="document.getElementById('fileInput').click()">Dosya
+                            Seç</button>
+                    </div>
+                    <p id="fileName" class="file-name"></p>
+
+                    <button id="scanBtn" class="btn-action" onclick="uploadReceipt()" disabled>
+                        <i class="fas fa-magic"></i> Analiz Et ve Kaydet
+                    </button>
+
+                    <div class="loader-container" id="loader" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Yapay zeka fişi okuyor, lütfen bekleyin...</p>
+                    </div>
+                </div>
+
+                <div id="resultCard" class="receipt-result" style="display: none;">
+                    <h3>✅ İşlem Başarılı!</h3>
+                    <div class="receipt-details" id="receiptDetails">
+                    </div>
+                </div>
+            </div>
+
+            <div id="dashboard-section" class="section" style="display: none;">
+                <header>
+                    <h1>Harcama Özetiniz</h1>
+                    <p>Tüm harcamalarınızın grafiksel analizi.</p>
+                </header>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="icon bg-purple"><i class="fas fa-wallet"></i></div>
+                        <div class="info">
+                            <h3>Toplam Harcama</h3>
+                            <p id="totalSpent">0 ₺</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon bg-blue"><i class="fas fa-receipt"></i></div>
+                        <div class="info">
+                            <h3>Fiş Sayısı</h3>
+                            <p id="totalReceipts">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon bg-orange"><i class="fas fa-store"></i></div>
+                        <div class="info">
+                            <h3>En Çok Gidilen</h3>
+                            <p id="topMerchant">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3>Mağazaya Göre Dağılım</h3>
+                        <canvas id="merchantChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Son Harcamalar</h3>
+                        <ul class="recent-list" id="recentList">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="/js/my-receipts.js"></script>
+</body>
+
+</html>

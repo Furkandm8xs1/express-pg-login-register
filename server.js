@@ -6,7 +6,6 @@ const { Pool } = require('pg');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const path = require('path');
-// dikkat et bu kod içinde inline js kullanıyoruz frontendde bu yüzden helmet i devre dışı bırakıyoruz
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,7 +19,6 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-
 pool.connect((err, client, release) => {
   if (err) {
     return console.error('❌ Veritabanı bağlantı hatası:', err.stack);
@@ -30,38 +28,42 @@ pool.connect((err, client, release) => {
 });
 
 
-// daha helmet kullanmayacagız cunku inline js e izin vermiyor ve frontend de inline js kullanıyoruz
+
 // Middleware
-app.use(helmet(
-  { contentSecurityPolicy: false }
-));
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cookieParser());
 app.use(cors());
-app.use(express.json({ limit: '10mb' })); // JSON gövdeleri için limit
-app.use(express.urlencoded({ extended: true, limit: '10mb' })); // URL-encoded gövdeleri için limit
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+
+
+
+
+// --- STATIC DOSYALAR ---
+// Frontend dosyaları
 app.use(express.static(path.join(__dirname, 'frontend', 'public')));
+// NOT: uploads klasörü artık kullanılmıyor (Dosyalar Cloudflare R2'de depolanıyor)
 
 
-
-// Route'lar
-
+// --- ROUTE IMPORTLARI ---
 const pageRoutes = require('./routes/pages');
 const authRoutes = require('./routes/auth')(pool);
 const userRoutes = require('./routes/user')(pool);
 const resetPasswordRoutes = require('./routes/reset-password')(pool);
 const messageRoutes = require('./routes/messages')(pool);
+// YENİ EKLENDİ: Fiş route'unu import et
+const receiptRoutes = require('./routes/receipts')(pool);
 
-// Sayfa route'larını dahil et
+
+// --- ROUTE KULLANIMLARI ---
 app.use('/', pageRoutes);
-// api route'larını dahil et
 app.use('/', authRoutes);
-app.use('/', userRoutes);  
-// Reset-password route'larını dahil et (pool'u parametre olarak geç)
+app.use('/', userRoutes);
 app.use('/', resetPasswordRoutes);
-// mesajlar sayfası route'larını dahil et (pool'u parametre olarak geç)
-
 app.use('/', messageRoutes);
-
+// YENİ EKLENDİ: Fiş route'unu kullan
+app.use('/', receiptRoutes);
 
 
 app.listen(PORT, '0.0.0.0', () => {
