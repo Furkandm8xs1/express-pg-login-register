@@ -24,15 +24,6 @@ const generateRefreshToken = (payload) => {
 };
 
 
-const generateAdminToken = (adminName) => {
-    const payload = {
-        name: adminName,
-        role: 'admin',
-        type: 'access'
-    };
-    return generateToken(payload, '2h'); // Admin oturumu 2 saat sürsün
-};
-
 
 const verifyToken = (token) => {
     try {
@@ -55,7 +46,6 @@ const decodeToken = (token) => {
 module.exports = {
     generateToken,
     generateRefreshToken,
-    generateAdminToken,
     verifyToken,
     decodeToken
 };

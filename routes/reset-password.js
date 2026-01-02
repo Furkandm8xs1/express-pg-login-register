@@ -65,7 +65,6 @@ module.exports = function(pool) {
           </div>
         `
       };
-
       await transporter.sendMail(mailOptions);
 
       res.json({ 

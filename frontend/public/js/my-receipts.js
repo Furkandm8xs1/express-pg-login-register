@@ -17,6 +17,7 @@ const resultCard = document.getElementById('resultCard');
 
 // Dashboard elements
 let myChart = null;
+let hourlyChart = null;
 
 // --- SAYFA YÜKLENDİĞİNDE ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -84,7 +85,7 @@ async function uploadReceipt() {
         const response = await fetch(`${API_BASE}/receipts/analyze`, {
             method: 'POST',
             body: formData,
-            credentials: 'include' 
+            credentials: 'include'
         });
 
         if (response.status === 401 || response.status === 403) {
@@ -183,7 +184,7 @@ function renderReceipts(receipts) {
         const amount = parseFloat(receipt.total_amount).toFixed(2);
         const totalQty = parseInt(receipt.total_quantity) || 0;
         const itemCount = parseInt(receipt.item_count) || 0;
-        
+
         return `
             <div class="receipt-card" onclick="openReceiptDetail(${receipt.id})">
                 <h3>🏪 ${receipt.merchant_name || 'Bilinmeyen Mağaza'}</h3>
@@ -202,7 +203,7 @@ function renderReceipts(receipts) {
 
 function searchReceipts() {
     const searchTerm = searchInput.value.toLowerCase().trim();
-    
+
     if (!searchTerm) {
         loadReceipts();
         return;
@@ -248,7 +249,7 @@ async function openReceiptDetail(receiptId) {
 
         // Modal içeriğini doldur
         document.getElementById('modalTitle').textContent = `Fiş Detayları - ${data.receipt.merchant_name || 'Bilinmeyen'}`;
-        
+
         // Mağaza adı düzenleme alanı
         document.getElementById('modalMerchantEdit').innerHTML = `
             <input type="text" value="${data.receipt.merchant_name || ''}" 
@@ -257,7 +258,7 @@ async function openReceiptDetail(receiptId) {
                 <i class="fas fa-save"></i> Kaydet
             </button>
         `;
-        
+
         const dateTime = `${new Date(data.receipt.transaction_date).toLocaleDateString('tr-TR')} ${data.receipt.transaction_time || ''}`;
         document.getElementById('modalDateTime').textContent = dateTime;
         document.getElementById('modalTotal').textContent = `${parseFloat(data.receipt.total_amount).toFixed(2)} ₺`;
@@ -321,7 +322,7 @@ async function updateMerchantName(receiptId, oldName) {
 
         const result = await response.json();
         alert('✅ Mağaza adı başarıyla güncellendi!');
-        
+
         // Modal'ı kapat ve fişleri yenile
         closeModal();
         loadReceipts();
@@ -336,8 +337,8 @@ async function updateMerchantName(receiptId, oldName) {
 async function updateItem(receiptId, itemId, oldName, oldQuantity) {
     const nameElement = document.getElementById(`item-name-${itemId}`);
     const quantityElement = document.getElementById(`item-quantity-${itemId}`);
-    
-    const newName = nameElement.value.trim();
+
+    const newName = nameElement.value.toLowerCase().trim();
     const newQuantity = parseInt(quantityElement.value);
 
     if (!newName) {
@@ -362,9 +363,9 @@ async function updateItem(receiptId, itemId, oldName, oldQuantity) {
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 item_name: newName,
-                quantity: newQuantity 
+                quantity: newQuantity
             })
         });
 
@@ -375,49 +376,10 @@ async function updateItem(receiptId, itemId, oldName, oldQuantity) {
 
         const result = await response.json();
         alert('✅ Ürün başarıyla güncellendi!');
-        
+
         // Modal'ı kapat ve fişleri yenile
         closeModal();
         loadReceipts();
-
-    } catch (error) {
-        console.error('Güncelleme hatası:', error);
-        alert('Hata: Ürün güncellenemedi');
-    }
-}
-
-// ESKİ FONKSİYON (artık updateItem kullanılıyor)
-async function updateItemName(receiptId, itemId, oldName) {
-    const inputElement = document.getElementById(`item-name-${itemId}`);
-    const newName = inputElement.value.trim();
-
-    if (!newName) {
-        alert('Ürün ismi boş olamaz');
-        return;
-    }
-
-    if (newName === oldName) {
-        alert('Değişiklik yapılmadı');
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE}/receipts/${receiptId}/items/${itemId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({ item_name: newName })
-        });
-
-        if (!response.ok) {
-            alert('Ürün güncellenemedi');
-            return;
-        }
-
-        const result = await response.json();
-        alert('✅ Ürün ismi başarıyla güncellendi!');
 
     } catch (error) {
         console.error('Güncelleme hatası:', error);
@@ -429,7 +391,7 @@ function closeModal() {
     receiptModal.style.display = 'none';
 }
 
-window.onclick = function(event) {
+window.onclick = function (event) {
     if (event.target === receiptModal) {
         receiptModal.style.display = 'none';
     }
@@ -455,6 +417,7 @@ async function loadDashboardData() {
 
         updateStats(receipts);
         renderCharts(receipts);
+        renderHourlyChart(receipts);
 
     } catch (error) {
         console.error('Dashboard veri hatası:', error);
@@ -499,39 +462,177 @@ function updateStats(receipts) {
 function renderCharts(receipts) {
     const ctx = document.getElementById('merchantChart').getContext('2d');
 
-    // Veriyi Hazırla
+    // Veriyi Hazırla - İsim normalizasyonu
     const merchantSpending = {};
     receipts.forEach(r => {
-        const name = r.merchant_name || 'Diğer';
+        // Normalizasyon: trim, lowercase, ve ard arda boşlukları temizle
+        let name = (r.merchant_name || 'Diğer').trim().toLowerCase();
+        name = name.replace(/\s+/g, ' '); // Ard arda boşlukları tek boşluğa çevir
+        // İlk harfi büyük yap
+        name = name.charAt(0).toUpperCase() + name.slice(1);
         merchantSpending[name] = (merchantSpending[name] || 0) + Number(r.total_amount);
     });
 
-    const labels = Object.keys(merchantSpending);
-    const data = Object.values(merchantSpending);
+    // Harcamaya göre sırala (en yüksekten aşağıya)
+    const sortedEntries = Object.entries(merchantSpending)
+        .sort((a, b) => b[1] - a[1]);
+    const labels = sortedEntries.map(entry => entry[0]);
+    const data = sortedEntries.map(entry => entry[1]);
 
     // Eğer eski grafik varsa yok et
     if (myChart) myChart.destroy();
+
+    // Canlı renkler
+    const colors = [
+        'rgba(108, 99, 255, 1)',      // Mor
+        'rgba(255, 107, 107, 1)',     // Kırmızı
+        'rgba(255, 170, 50, 1)',      // Turuncu
+        'rgba(77, 150, 255, 1)',      // Mavi
+        'rgba(46, 213, 115, 1)',      // Yeşil
+        'rgba(255, 195, 113, 1)',     // Sarı 
+        'rgba(165, 142, 251, 1)',     // Açık mor
+        'rgba(255, 127, 179, 1)'      // Pembe
+    ];
+
+    const backgroundColor = data.map((_, index) => colors[index % colors.length]);
+    const borderColors = backgroundColor.map(color => color.replace('1)', '0.8)'));
 
     myChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Harcama Tutarı (TL)',
+                label: 'Harcama Tutarı (₺)',
                 data: data,
-                backgroundColor: [
-                    'rgba(108, 99, 255, 0.7)',
-                    'rgba(255, 159, 67, 0.7)',
-                    'rgba(77, 150, 255, 0.7)',
-                    'rgba(255, 99, 132, 0.7)'
-                ],
-                borderWidth: 1
+                backgroundColor: backgroundColor,
+                borderColor: borderColors,
+                borderWidth: 2,
+                borderRadius: 8,
+                hoverBackgroundColor: backgroundColor.map(color => color.replace('1)', '0.9)'))
+            }]
+        },
+        options: {
+            indexAxis: 'x',
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        font: { size: 12, weight: 'bold' },
+                        padding: 15,
+                        color: '#333'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function (value) {
+                            return value.toFixed(0) + ' ₺';
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderHourlyChart(receipts) {
+    const ctx = document.getElementById('hourlyChart').getContext('2d');
+
+    // Saatlik veriyi hazırla
+    const hourlyData = {};
+
+    // 0-23 saatleri başlatırken sadece bir haftalık veriler
+    for (let i = 0; i < 24; i++) {
+        hourlyData[i] = 0;
+    }
+
+    receipts.forEach(r => {
+        if (r.transaction_time) {
+            const hour = parseInt(r.transaction_time.split(':')[0]);
+            if (!isNaN(hour) && hour >= 0 && hour < 24) {
+                hourlyData[hour]++;
+            }
+        }
+    });
+
+    const hours = Object.keys(hourlyData).map(h => {
+        const num = parseInt(h);
+        return `${num.toString().padStart(2, '0')}:00`;
+    });
+    const data = Object.values(hourlyData);
+
+    // Eğer eski grafik varsa yok et
+    if (hourlyChart) hourlyChart.destroy();
+
+    // Gradient rengini kullan
+    const ctx_data = document.getElementById('hourlyChart');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(108, 99, 255, 0.8)');
+    gradient.addColorStop(1, 'rgba(108, 99, 255, 0.1)');
+
+    hourlyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: hours,
+            datasets: [{
+                label: 'Ziyaret Sayısı',
+                data: data,
+                backgroundColor: gradient,
+                borderColor: 'rgba(108, 99, 255, 1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: 'rgba(108, 99, 255, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                pointHoverBackgroundColor: 'rgba(255, 107, 107, 1)'
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        font: { size: 12, weight: 'bold' },
+                        padding: 15,
+                        color: '#333'
+                    }
+                }
+            },
             scales: {
-                y: { beginAtZero: true }
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        callback: function (value) {
+                            return value + ' ziyaret';
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
             }
         }
     });
@@ -542,7 +643,7 @@ function deleteCookie(name) {
     document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 }
 
-function logout(){
+function logout() {
     deleteCookie('token');
     return window.location.href = '/'
 }

@@ -8,10 +8,6 @@ const { generateToken } = require('../utils/jwt');
 
 module.exports = (pool) => {
   const router = express.Router();
-
-
-
-
   // Rate limiting middleware - Brute force saldırılarına karşı
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 dakika
@@ -20,8 +16,6 @@ module.exports = (pool) => {
     standardHeaders: true,
     legacyHeaders: false,
   });
-
-
 
   const validateRegisterInput = (req, res, next) => {
     const { username, email, password, birthdate } = req.body;

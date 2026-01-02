@@ -11,10 +11,10 @@ const { uploadToR2, deleteFromR2 } = require('../utils/r2-storage');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // --- ROUTE FONKSIYONU ---
-module.exports = (pool) => {
+module.exports = (pool, upload) => {
 
     // 1. Fiş Yükle ve Analiz Et
-    router.post('/api/receipts/analyze', verifyToken, async (req, res) => {
+    router.post('/api/receipts/analyze', upload.single('receiptImage'), verifyToken, async (req, res) => {
         const client = await pool.connect();
 
         try {
@@ -22,7 +22,11 @@ module.exports = (pool) => {
                 return res.status(400).json({ error: 'Lütfen bir resim yükleyin.' });
             }
 
-            const userId = req.user.id || 1;
+            if (!req.user || !req.user.id) {
+                return res.status(401).json({ error: 'Kimlik doğrulama gerekli' });
+            }
+
+            const userId = req.user.id;
 
             const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
             const prompt = `
@@ -31,12 +35,13 @@ module.exports = (pool) => {
                 {
                     "merchant": {"name": "Mağaza Adı", "branch": "Şube", "address": "Adres", "tax_number": "VKN"},
                     "transaction": {"date": "YYYY-MM-DD", "time": "HH:MM", "receipt_no": "Fiş No"},
-                    "items": [{"name": "Ürün", "quantity": 1, "price": 10.00, "total": 10.00}],
+                    "items": [{"name": "Ürün", "category": "Kategori", "quantity": 1, "price": 10.00, "total": 10.00}],
                     "financials": {"total_amount": 100.00, "total_tax": 18.00, "currency": "TRY", "payment_method": "Kredi Kartı"}
                 }
             `;
 
-            // Buffer'ı base64'e çevir
+            // Buffer'ı base64'e çevir 
+
             const base64Image = req.file.buffer.toString('base64');
             const imagePart = {
                 inlineData: {
@@ -74,23 +79,53 @@ module.exports = (pool) => {
             let merchantId = null;
             if (data.merchant && data.merchant.name) {
                 if (data.merchant.tax_number) {
-                    const merchantRes = await client.query(
-                        `INSERT INTO merchants (name, branch, address, tax_number) 
-                         VALUES ($1, $2, $3, $4) 
-                         ON CONFLICT (tax_number) DO UPDATE SET name = EXCLUDED.name, branch = EXCLUDED.branch, address = EXCLUDED.address 
-                         RETURNING id`,
-                        [data.merchant.name, data.merchant.branch, data.merchant.address, data.merchant.tax_number]
+                    // Tax number ile kontrol et
+                    let merchantRes = await client.query(
+                        `SELECT id FROM merchants WHERE tax_number = $1 LIMIT 1`,
+                        [data.merchant.tax_number]
                     );
-                    merchantId = merchantRes.rows[0].id;
+
+                    if (merchantRes.rows.length > 0) {
+                        // Mağaza var, update et
+                        merchantId = merchantRes.rows[0].id;
+                        await client.query(
+                            `UPDATE merchants SET name = $1, branch = $2, address = $3 WHERE id = $4`,
+                            [data.merchant.name, data.merchant.branch, data.merchant.address, merchantId]
+                        );
+                    } else {
+                        // Mağaza yok, insert et
+                        merchantRes = await client.query(
+                            `INSERT INTO merchants (name, branch, address, tax_number) 
+                             VALUES ($1, $2, $3, $4) 
+                             RETURNING id`,
+                            [data.merchant.name, data.merchant.branch, data.merchant.address, data.merchant.tax_number]
+                        );
+                        merchantId = merchantRes.rows[0].id;
+                    }
                 } else {
-                    const merchantRes = await client.query(
-                        `INSERT INTO merchants (name, branch, address, tax_number) 
-                         VALUES ($1, $2, $3, $4) 
-                         ON CONFLICT (name, branch) DO UPDATE SET address = EXCLUDED.address 
-                         RETURNING id`,
-                        [data.merchant.name, data.merchant.branch, data.merchant.address, data.merchant.tax_number]
+                    // Name + Branch ile kontrol et
+                    let merchantRes = await client.query(
+                        `SELECT id FROM merchants WHERE name = $1 AND branch = $2 LIMIT 1`,
+                        [data.merchant.name, data.merchant.branch]
                     );
-                    merchantId = merchantRes.rows[0].id;
+
+                    if (merchantRes.rows.length > 0) {
+                        // Mağaza var, update et
+                        merchantId = merchantRes.rows[0].id;
+                        await client.query(
+                            `UPDATE merchants SET address = $1 WHERE id = $2`,
+                            [data.merchant.address, merchantId]
+                        );
+                    } else {
+                        // Mağaza yok, insert et
+                        merchantRes = await client.query(
+                            `INSERT INTO merchants (name, branch, address, tax_number) 
+                             VALUES ($1, $2, $3, $4) 
+                             RETURNING id`,
+                            [data.merchant.name, data.merchant.branch, data.merchant.address, null]
+                        );
+                        merchantId = merchantRes.rows[0].id;
+                    }
                 }
             }
 
@@ -144,7 +179,7 @@ module.exports = (pool) => {
         try {
             const userId = req.user.id;
             const result = await pool.query(`
-                SELECT r.*, 
+                SELECT r.*,
                        m.name as merchant_name, 
                        COUNT(ri.id) as item_count,
                        COALESCE(SUM(ri.quantity), 0) as total_quantity
@@ -298,6 +333,71 @@ module.exports = (pool) => {
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: 'Ürün güncellenemedi' });
+        }
+    });
+
+    // 6. FİŞ SİL (Sadece fiş sahibi veya admin)
+    router.delete('/api/receipts/:receiptId', verifyToken, async (req, res) => {
+        try {
+            const userId = req.user.id;
+            const receiptId = req.params.receiptId;
+
+            // Fiş sahibi mi kontrol et
+            const receiptCheck = await pool.query(
+                `SELECT image_url FROM receipts WHERE id = $1 AND user_id = $2`,
+                [receiptId, userId]
+            );
+
+            if (receiptCheck.rows.length === 0) {
+                return res.status(403).json({ error: 'Bu fişe erişim yetkiniz yok' });
+            }
+
+            // R2'den resmi sil
+            const imageUrl = receiptCheck.rows[0].image_url;
+            if (imageUrl) {
+                try {
+                    await deleteFromR2(imageUrl);
+                } catch (deleteError) {
+                    console.error('R2 silme hatası:', deleteError);
+                }
+            }
+
+            // Veritabanında fiş sil
+            await pool.query(`DELETE FROM receipt_items WHERE receipt_id = $1`, [receiptId]);
+            await pool.query(`DELETE FROM receipts WHERE id = $1`, [receiptId]);
+
+            res.json({ success: true, message: 'Fiş başarıyla silindi' });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Fiş silinemedi' });
+        }
+    });
+
+    // 7. ADMİN: TÜM FİŞLERİ LİSTELE
+    router.get('/api/admin/receipts', verifyToken, async (req, res) => {
+        try {
+            // Admin kontrolü
+            if (!req.user.isAdmin) {
+                return res.status(403).json({ error: 'Bu işlem için admin yetkisi gerekli' });
+            }
+
+            const result = await pool.query(`
+                SELECT r.*, 
+                       u.username as user_name,
+                       m.name as merchant_name, 
+                       COUNT(ri.id) as item_count
+                FROM receipts r
+                LEFT JOIN users u ON r.user_id = u.id
+                LEFT JOIN merchants m ON r.merchant_id = m.id
+                LEFT JOIN receipt_items ri ON r.id = ri.receipt_id
+                GROUP BY r.id, u.username, m.name
+                ORDER BY r.created_at DESC
+            `);
+
+            res.json(result.rows);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Fişler getirilemedi' });
         }
     });
 

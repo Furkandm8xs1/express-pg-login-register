@@ -57,13 +57,13 @@ module.exports = function (pool) {
     }
   };
 
-  // KULLANICI BİLGİLERİNİ GETİR (Sadece kendi bilgileri)
+  // KULLANICI BİLGİLERİNİ GETİR (Sadece kendi bilgileri veya Admin)
 
-  router.get("/user/:id", verifyToken, validateUserId, async (req, res) => {
-    
+  router.get("/user/:id", verifyToken, validateUserId, requireOwnerOrAdmin, async (req, res) => {
+
     const userId = parseInt(req.params.id);
 
-   try {
+    try {
 
       const result = await pool.query('SELECT id, username, email, created_at, profile_photo FROM users WHERE id = $1', [userId]);
 
@@ -80,11 +80,11 @@ module.exports = function (pool) {
   });
 
   // TÜM KULLANICILARI LİSTELE (SADECE ADMİN)
-  router.get("/users", verifyToken, requireAdmin,  async (req, res) => {
+  router.get("/users", verifyToken, requireAdmin, async (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
-   
+
     try {
       const result = await pool.query(
         'SELECT id, username, email, created_at, is_admin, profile_photo FROM users ORDER BY id ASC'
@@ -99,7 +99,7 @@ module.exports = function (pool) {
   });
 
   // PROFİL FOTOĞRAFI GÜNCELLE (Sadece kendi profili veya admin)
-  router.put("/user/:id/photo", verifyToken,validatePhotoUrl,validateUserId, async (req, res) => {
+  router.put("/user/:id/photo", verifyToken, validateUserId, validatePhotoUrl, requireOwnerOrAdmin, async (req, res) => {
     const userId = parseInt(req.params.id);
     const { photoUrl } = req.body;
 
