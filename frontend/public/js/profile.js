@@ -11,7 +11,7 @@ function parseJwt(token) {
     try {
         const base64Url = token.split('.')[1];
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
         return JSON.parse(jsonPayload);
@@ -20,6 +20,7 @@ function parseJwt(token) {
         return null;
     }
 }
+
 function getTokenFromCookie(name = 'token') {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -65,12 +66,30 @@ async function loadUserInfo() {
         });
 
         const user = await res.json();
+        console.log('📱 Kullanıcı verisi:', user);
+        console.log('📸 Profil Fotoğrafı URL:', user.profile_photo);
 
         if (res.ok) {
-            if (user.profile_photo) {
-                document.getElementById('profilePhoto').src = user.profile_photo;
+            // ✅ ÖNCE IMG'i SET ET
+            if (user.profile_photo && user.profile_photo.trim() !== '') {
+                console.log('✅ Fotoğraf set ediliyor:', user.profile_photo);
+                const imgElement = document.getElementById('profilePhoto');
+                if (imgElement) {
+                    imgElement.src = user.profile_photo;
+                    imgElement.onerror = () => {
+                        console.error('❌ Fotoğraf yüklenemedi:', user.profile_photo);
+                        // Hata durumunda SVG'ye dön
+                        imgElement.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="50" fill="%23ddd"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" font-size="40" fill="%23999"%3E👤%3C/text%3E%3C/svg%3E';
+                    };
+                    imgElement.onload = () => {
+                        console.log('✅ Fotoğraf başarıyla yüklendi');
+                    };
+                }
+            } else {
+                console.warn('⚠️  Fotoğraf URL bulunamadı veya boş');
             }
 
+            // ✅ SONRA CONTENT'İ SET ETf
             document.getElementById('userContent').innerHTML = `
                 <h2 class="profile-name">${user.username}</h2>
                 <p class="profile-email">${user.email}</p>
@@ -279,41 +298,57 @@ async function saveCroppedPhoto() {
         0, 0, size, size
     );
 
-    const photoUrl = outputCanvas.toDataURL('image/jpeg', 0.9);
-
-    try {
-        const res = await fetch(`http://localhost:3000/user/${userId}/photo`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ photoUrl })
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-            document.getElementById('profilePhoto').src = photoUrl;
-            closeCropModal();
-            alert('✅ Profil fotoğrafı başarıyla güncellendi!');
-        } else if (res.status === 403) {
-            alert('❌ Bu işlem için yetkiniz yok');
-        } else if (res.status === 400) {
-            alert('❌ ' + (data.error || 'Geçersiz fotoğraf formatı'));
-        } else {
-            alert('❌ Fotoğraf yüklenemedi: ' + (data.error || 'Bilinmeyen hata'));
+    // 1. Canvas'ı Blob'a dönüştür (Base64 yerine)
+    outputCanvas.toBlob(async(blob) => {
+        if (!blob) {
+            alert('❌ Resim işleme başarısız oldu');
+            return;
         }
-    } catch (error) {
-        console.error('Save photo error:', error);
-        alert('❌ Sunucuya bağlanılamadı');
-    }
+
+        try {
+            // 2. FormData oluştur ve Blob'u ekle
+            const formData = new FormData();
+            formData.append('photo', blob, 'profile.jpg');
+
+            // 3. R2'ye upload et (API endpoint)
+            const res = await fetch(`http://localhost:3000/user/${userId}/photo`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    // Content-Type'ı otomatik olarak multipart/form-data'ya ayarla
+                },
+                body: formData,
+                credentials: 'include'
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                // 4. Response'dan URL al ve UI'ı güncelle
+                const newPhotoUrl = data.photoUrl;
+                document.getElementById('profilePhoto').src = newPhotoUrl;
+                closeCropModal();
+                alert('✅ Profil fotoğrafı başarıyla güncellendi!');
+            } else if (res.status === 403) {
+                alert('❌ Bu işlem için yetkiniz yok');
+            } else if (res.status === 400) {
+                alert('❌ ' + (data.error || 'Geçersiz fotoğraf formatı'));
+            } else {
+                alert('❌ Fotoğraf yüklenemedi: ' + (data.error || 'Bilinmeyen hata'));
+            }
+        } catch (error) {
+            console.error('Save photo error:', error);
+            alert('❌ Sunucuya bağlanılamadı: ' + error.message);
+        }
+    }, 'image/jpeg', 0.9);
 }
 
 function logout() {
-   deleteCookie('token');
+    deleteCookie('token');
     window.location.href = '/login';
 }
 
 // Load user info on page load
-loadUserInfo();
+document.addEventListener('DOMContentLoaded', () => {
+    loadUserInfo();
+});

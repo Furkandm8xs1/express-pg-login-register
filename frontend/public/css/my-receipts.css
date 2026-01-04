@@ -9,6 +9,21 @@
     --warning: #FFB700;
     --danger: #FF6B6B;
     --info: #4D96FF;
+    --border-color: #ddd;
+    --card-shadow: rgba(0, 0, 0, 0.05);
+    --input-bg: #ffffff;
+}
+
+/* Karanlık Modu */
+:root.dark-mode {
+    --primary: #7E7FFF;
+    --secondary: #E8EAEF;
+    --bg: #1a1a2e;
+    --white: #2d2d44;
+    --text: #E8EAEF;
+    --border-color: #404060;
+    --card-shadow: rgba(0, 0, 0, 0.3);
+    --input-bg: #2d2d44;
 }
 
 * {
@@ -33,8 +48,8 @@ body {
 /* Sidebar */
 .sidebar {
     width: var(--sidebar-width);
-    background: var(--secondary);
-    color: white;
+    background: #2A2D3E;
+    color: rgb(255, 255, 255);
     display: flex;
     flex-direction: column;
     padding: 20px;
@@ -62,6 +77,10 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+.menu li span {
+    display: inline;
 }
 
 .menu li:hover,
@@ -107,6 +126,14 @@ header h1 {
 .drop-zone:hover {
     border-color: var(--primary);
     background: #f8f8ff;
+}
+
+:root.dark-mode .drop-zone {
+    border-color: var(--border-color);
+}
+
+:root.dark-mode .drop-zone:hover {
+    background: rgba(126, 127, 255, 0.1);
 }
 
 .drop-zone i {
@@ -179,11 +206,22 @@ header h1 {
     text-align: left;
 }
 
+:root.dark-mode .receipt-result {
+    background: rgba(46, 221, 115, 0.15);
+    border-color: var(--primary);
+    color: var(--text);
+}
+
 .item-row {
     display: flex;
     justify-content: space-between;
     padding: 5px 0;
     border-bottom: 1px solid #ddd;
+}
+
+:root.dark-mode .item-row {
+    border-bottom-color: var(--border-color);
+    color: var(--text);
 }
 
 .total-row {
@@ -213,6 +251,12 @@ header h1 {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(108, 99, 255, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    color: var(--text);
+}
+
+:root.dark-mode .stat-card {
+    background: linear-gradient(135deg, var(--white) 0%, rgba(126, 127, 255, 0.1) 100%);
+    border-color: rgba(126, 127, 255, 0.3);
 }
 
 .stat-card:hover {
@@ -269,6 +313,12 @@ header h1 {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(108, 99, 255, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    color: var(--text);
+}
+
+:root.dark-mode .chart-container {
+    background: linear-gradient(135deg, var(--white) 0%, rgba(126, 127, 255, 0.1) 100%);
+    border-color: rgba(126, 127, 255, 0.3);
 }
 
 .chart-container:hover {
@@ -297,6 +347,11 @@ header h1 {
     transition: 0.3s;
     border-radius: 8px;
     margin-bottom: 5px;
+    color: var(--text);
+}
+
+:root.dark-mode .recent-list li {
+    border-bottom-color: var(--border-color);
 }
 
 .recent-list li:hover {
@@ -313,6 +368,7 @@ header h1 {
     font-size: 0.95rem;
 }
 
+
 @media (max-width: 768px) {
     .app-container {
         flex-direction: column;
@@ -324,20 +380,384 @@ header h1 {
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
-        padding: 10px 20px;
+        padding: 10px 15px;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .logo h2 {
+        margin-bottom: 0;
+        font-size: 1.2rem;
+        white-space: nowrap;
     }
 
     .menu {
         display: flex;
-        gap: 10px;
+        gap: 5px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        flex: 1;
+        margin: 0 10px;
     }
 
-    .menu li span {
+    .menu li {
+        padding: 10px 12px;
+        margin-bottom: 0;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .menu li i {
         display: none;
     }
 
-    /* Mobilde metinleri gizle */
+    /* Content mobilde full width ve padding azalt */
+    .content {
+        flex: 1;
+        padding: 15px;
+        overflow-y: auto;
+    }
+
+    header h1 {
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+    }
+
+    header p {
+        font-size: 0.85rem;
+        margin-bottom: 15px;
+    }
+
+    /* Stats Grid mobilde single column */
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card {
+        padding: 15px;
+        gap: 15px;
+    }
+
+    .stat-card .icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+    }
+
+    .stat-card h3 {
+        font-size: 0.9rem;
+        margin-bottom: 3px;
+    }
+
+    .stat-card .info p {
+        font-size: 1.2rem;
+    }
+
+    /* Charts Grid mobilde single column */
     .charts-grid {
         grid-template-columns: 1fr;
+        gap: 15px;
     }
+
+    .chart-container {
+        padding: 15px;
+    }
+
+    .chart-container h3 {
+        font-size: 1rem;
+        margin-bottom: 15px;
+    }
+
+    .recent-list {
+        max-height: 300px;
+    }
+
+    .recent-list li {
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+
+    /* Modal mobilde full screen */
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+        padding: 15px;
+        max-height: 90vh;
+    }
+
+    .modal-header {
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+
+    .modal-header h2 {
+        font-size: 1.1rem;
+    }
+
+    /* Form elemanları mobilde */
+    .item-edit-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .quantity-input {
+        width: 100%;
+    }
+
+    .upload-container {
+        padding: 15px;
+        margin: 0;
+    }
+
+    .drop-zone {
+        padding: 20px;
+    }
+
+    .drop-zone i {
+        font-size: 2rem;
+    }
+
+    .receipt-card {
+        padding: 15px;
+    }
+
+    .receipt-card h3 {
+        font-size: 1rem;
+    }
+
+    .receipt-card .meta {
+        font-size: 0.8rem;
+    }
+
+    .receipt-card .amount {
+        font-size: 1.1rem;
+    }
+
+    .search-box {
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+
+    .search-box input,
+    .search-box button {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+
+    /* Receipts container grid */
+    .receipts-container {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    /* Theme toggle button mobilde */
+    #themeToggle {
+        width: 45px;
+        height: 45px;
+        top: 10px;
+        right: 10px;
+        font-size: 1.2rem;
+    }
+
+    /* Loading ve spinner */
+    .loading {
+        padding: 15px;
+    }
+
+    .spinner-small {
+        width: 25px;
+        height: 25px;
+        border-width: 2px;
+    }
+
+    /* Dropdown stileri mobilde */
+    select {
+        font-size: 0.9rem;
+        padding: 10px;
+    }
+
+    /* Label ve input mobilde */
+    label {
+        font-size: 0.9rem;
+    }
+
+    .edit-input,
+    .item-name {
+        font-size: 0.9rem;
+        padding: 8px;
+    }
+
+    .btn-save-item {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+
+    .monthly-summary-card {
+        padding: 10px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebar {
+        padding: 8px 10px;
+    }
+
+    .logo h2 {
+        font-size: 1rem;
+    }
+
+    .menu li {
+        padding: 8px 10px;
+        font-size: 0.75rem;
+    }
+
+    .content {
+        padding: 10px;
+    }
+
+    header h1 {
+        font-size: 1.1rem;
+    }
+
+    header p {
+        font-size: 0.75rem;
+    }
+
+    .stat-card {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .stat-card .icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .chart-container {
+        padding: 12px;
+    }
+
+    .receipt-card {
+        padding: 12px;
+    }
+
+    .receipt-card h3 {
+        font-size: 0.95rem;
+    }
+
+    .item-edit-row {
+        padding: 8px;
+    }
+
+    .btn-primary,
+    .btn-action {
+        padding: 10px 15px;
+        font-size: 0.85rem;
+    }
+
+    .search-box input,
+    .search-box button {
+        padding: 8px;
+        font-size: 0.8rem;
+    }
+
+    #themeToggle {
+        width: 40px;
+        height: 40px;
+        top: 8px;
+        right: 8px;
+    }
+}
+
+/* Theme Toggle Button */
+#themeToggle {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    background: var(--white);
+    border: 2px solid var(--border-color);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--primary);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px var(--card-shadow);
+    z-index: 100;
+}
+
+#themeToggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px var(--card-shadow);
+}
+
+#themeToggle:active {
+    transform: scale(0.95);
+}
+
+/* Karanlık modu için input alanları */
+:root.dark-mode .edit-input,
+:root.dark-mode .quantity-input,
+:root.dark-mode .item-name {
+    background: var(--input-bg);
+    color: var(--text);
+    border-color: var(--border-color);
+}
+
+:root.dark-mode .edit-input:focus,
+:root.dark-mode .quantity-input:focus,
+:root.dark-mode .item-name:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 5px rgba(126, 127, 255, 0.3);
+}
+
+/* Karanlık modu için search input */
+:root.dark-mode .search-box input {
+    background: var(--input-bg);
+    color: var(--text);
+    border-color: var(--border-color);
+}
+
+:root.dark-mode .search-box input::placeholder {
+    color: rgba(232, 234, 239, 0.6);
+}
+
+/* Karanlık modu için dropdown */
+:root.dark-mode select {
+    background: var(--input-bg);
+    color: var(--text);
+    border-color: var(--border-color);
+}
+
+/* Karanlık modu modal */
+:root.dark-mode .modal {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+:root.dark-mode .modal-content {
+    background-color: var(--white);
+    color: var(--text);
+}
+
+:root.dark-mode .modal-header {
+    border-bottom-color: var(--border-color);
+}
+
+:root.dark-mode .close-btn {
+    color: var(--text);
+}
+
+:root.dark-mode .close-btn:hover {
+    color: var(--primary);
 }

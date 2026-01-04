@@ -33,7 +33,6 @@ const verifyToken = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
-    console.log("✅ Kullanıcı Doğrulandı:", req.user.username || req.user.email);
     next();
   } catch (err) {
     console.log("❌ Token Hatası:", err.message);

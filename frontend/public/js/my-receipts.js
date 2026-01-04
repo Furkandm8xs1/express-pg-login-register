@@ -19,6 +19,11 @@ const resultCard = document.getElementById('resultCard');
 let myChart = null;
 let hourlyChart = null;
 
+// Receipts filtering
+let allReceipts = [];
+let filteredReceipts = [];
+let dashboardReceipts = [];
+
 // --- SAYFA YÜKLENDİĞİNDE ---
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
@@ -80,6 +85,10 @@ async function uploadReceipt() {
 
     const formData = new FormData();
     formData.append('receiptImage', file);
+
+    // Dosya seçimini temizle ve input'ı resetle
+    fileInput.value = '';
+    fileNameDisplay.textContent = 'Dosya seçin';
 
     try {
         const response = await fetch(`${API_BASE}/receipts/analyze`, {
@@ -159,8 +168,14 @@ async function loadReceipts() {
         }
 
         const receipts = await response.json();
+        allReceipts = receipts;
+        filteredReceipts = receipts;
 
         loading.style.display = 'none';
+
+        // Ay dropdown'unu ve özet kartlarını doldur
+        populateMonthFilter(receipts);
+        renderMonthlySummaryCards(receipts);
 
         if (receipts.length === 0) {
             emptyState.style.display = 'block';
@@ -205,7 +220,8 @@ function searchReceipts() {
     const searchTerm = searchInput.value.toLowerCase().trim();
 
     if (!searchTerm) {
-        loadReceipts();
+        renderReceipts(filteredReceipts);
+        emptyState.style.display = 'none';
         return;
     }
 
@@ -227,6 +243,150 @@ function searchReceipts() {
         emptyState.style.display = 'block';
     } else {
         emptyState.style.display = 'none';
+    }
+}
+
+// AY DROPDOWN'UNU DOLDUR
+
+function populateMonthFilter() {
+    const monthFilter = document.getElementById('monthFilter');
+
+    // Eski seçenekleri temizle (başlık hariç)
+    while (monthFilter.options.length > 1) {
+        monthFilter.remove(1);
+    }
+
+    // 2026 yılının 12 ayını ekle
+    for (let month = 0; month < 12; month++) {
+        const date = new Date(2026, month, 1);
+        const monthKey = `2026-${String(month + 1).padStart(2, '0')}`;
+        const monthName = date.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+
+        const option = document.createElement('option');
+        option.value = monthKey;
+        option.textContent = monthName;
+        monthFilter.appendChild(option);
+    }
+}
+
+// AYLLIK ÖZET KARTLARINI RENDER ET
+function renderMonthlySummaryCards(receipts) {
+    const container = document.getElementById('monthlySummaryCards');
+    if (!container) return;
+
+    const monthlyData = {};
+
+    // Aylık verileri hesapla
+    receipts.forEach(receipt => {
+        const date = new Date(receipt.transaction_date);
+        const year = date.getFullYear();
+        const month = date.getMonth();
+
+        if (year >= 2026) {
+            const key = `${year}-${String(month + 1).padStart(2, '0')}`;
+
+            if (!monthlyData[key]) {
+                monthlyData[key] = {
+                    total: 0,
+                    count: 0,
+                    month: date.toLocaleDateString('tr-TR', { month: 'short', year: '2-digit' })
+                };
+            }
+
+            monthlyData[key].total += Number(receipt.total_amount);
+            monthlyData[key].count += 1;
+        }
+    });
+
+    // Kartları oluştur
+    const sortedMonths = Object.entries(monthlyData).sort((a, b) => b[0].localeCompare(a[0]));
+
+    container.innerHTML = sortedMonths.map(([monthKey, data]) => `
+        <div class="month-summary-card" onclick="selectMonth('${monthKey}')">
+            <div class="month-name">${data.month}</div>
+            <div class="month-info">${data.total.toFixed(2)} ₺</div>
+            <div class="month-detail">${data.count} fiş</div>
+        </div>
+    `).join('');
+}
+
+// AY SEÇ VE FİŞLERİ FILTRELE
+function selectMonth(monthKey) {
+    const monthFilter = document.getElementById('monthFilter');
+    monthFilter.value = monthKey;
+    filterReceiptsByMonth();
+
+    // Kartları güncelle
+    updateMonthlySummaryCardsUI();
+}
+
+// DROPDOWN'DAN SEÇILEN AYA GÖRE FİLTRELE
+function filterReceiptsByMonth() {
+    const monthFilter = document.getElementById('monthFilter');
+    const selectedMonth = monthFilter.value;
+
+    if (!selectedMonth) {
+        // Tüm aylar
+        filteredReceipts = allReceipts;
+    } else {
+        // Seçilen aya göre filtrele
+        filteredReceipts = allReceipts.filter(receipt => {
+            const date = new Date(receipt.transaction_date);
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const receiptMonthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+            return receiptMonthKey === selectedMonth;
+        });
+    }
+
+    // UI'ı güncelle
+    updateMonthlySummaryCardsUI();
+    renderReceipts(filteredReceipts);
+
+    if (filteredReceipts.length === 0) {
+        emptyState.style.display = 'block';
+        receiptsContainer.style.display = 'none';
+    } else {
+        emptyState.style.display = 'none';
+        receiptsContainer.style.display = 'grid';
+    }
+}
+
+// ÖZET KARTLARI AKTIF/PASIF DURUMUNU GÜNCELLEyüncelle
+function updateMonthlySummaryCardsUI() {
+    const monthFilter = document.getElementById('monthFilter');
+    const selectedMonth = monthFilter.value;
+    const cards = document.querySelectorAll('.month-summary-card');
+
+    cards.forEach(card => {
+        card.classList.remove('active');
+    });
+
+    // Seçili ayı bulup vurgula
+    if (selectedMonth === '') {
+        // Hepsi seçili değilse, vurgulama yok
+    } else {
+        const cards = document.querySelectorAll('.month-summary-card');
+        let monthData = {};
+
+        allReceipts.forEach(receipt => {
+            const date = new Date(receipt.transaction_date);
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+
+            if (monthKey === selectedMonth) {
+                const monthText = date.toLocaleDateString('tr-TR', { month: 'short', year: '2-digit' });
+                monthData[monthText] = true;
+            }
+        });
+
+        cards.forEach(card => {
+            const monthText = card.querySelector('.month-name').textContent;
+            if (monthData[monthText]) {
+                card.classList.add('active');
+            }
+        });
     }
 }
 
@@ -414,10 +574,13 @@ async function loadDashboardData() {
         }
 
         const receipts = await response.json();
+        dashboardReceipts = receipts;
+
+        // Dashboard ay dropdown'unu doldur
+        populateDashboardMonthFilter(receipts);
 
         updateStats(receipts);
         renderCharts(receipts);
-        renderHourlyChart(receipts);
 
     } catch (error) {
         console.error('Dashboard veri hatası:', error);
@@ -547,96 +710,9 @@ function renderCharts(receipts) {
     });
 }
 
-function renderHourlyChart(receipts) {
-    const ctx = document.getElementById('hourlyChart').getContext('2d');
 
-    // Saatlik veriyi hazırla
-    const hourlyData = {};
 
-    // 0-23 saatleri başlatırken sadece bir haftalık veriler
-    for (let i = 0; i < 24; i++) {
-        hourlyData[i] = 0;
-    }
 
-    receipts.forEach(r => {
-        if (r.transaction_time) {
-            const hour = parseInt(r.transaction_time.split(':')[0]);
-            if (!isNaN(hour) && hour >= 0 && hour < 24) {
-                hourlyData[hour]++;
-            }
-        }
-    });
-
-    const hours = Object.keys(hourlyData).map(h => {
-        const num = parseInt(h);
-        return `${num.toString().padStart(2, '0')}:00`;
-    });
-    const data = Object.values(hourlyData);
-
-    // Eğer eski grafik varsa yok et
-    if (hourlyChart) hourlyChart.destroy();
-
-    // Gradient rengini kullan
-    const ctx_data = document.getElementById('hourlyChart');
-    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(108, 99, 255, 0.8)');
-    gradient.addColorStop(1, 'rgba(108, 99, 255, 0.1)');
-
-    hourlyChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: hours,
-            datasets: [{
-                label: 'Ziyaret Sayısı',
-                data: data,
-                backgroundColor: gradient,
-                borderColor: 'rgba(108, 99, 255, 1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointBackgroundColor: 'rgba(108, 99, 255, 1)',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointRadius: 6,
-                pointHoverRadius: 8,
-                pointHoverBackgroundColor: 'rgba(255, 107, 107, 1)'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: true,
-                    labels: {
-                        font: { size: 12, weight: 'bold' },
-                        padding: 15,
-                        color: '#333'
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1,
-                        callback: function (value) {
-                            return value + ' ziyaret';
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(0,0,0,0.05)'
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    }
-                }
-            }
-        }
-    });
-}
 
 // --- ÇIKIŞ FONKSİYONU ---
 function deleteCookie(name) {
@@ -647,3 +723,55 @@ function logout() {
     deleteCookie('token');
     return window.location.href = '/'
 }
+
+// ============================================================
+// DASHBOARD AY FİLTRESİ FONKSİYONLARI
+// ============================================================
+
+// DASHBOARD AY DROPDOWN'UNU DOLDUR
+function populateDashboardMonthFilter(receipts) {
+    const monthFilter = document.getElementById('dashboardMonthFilter');
+    if (!monthFilter) return;
+
+    // Eski seçenekleri temizle (başlık hariç)
+    while (monthFilter.options.length > 1) {
+        monthFilter.remove(1);
+    }
+
+    // 2026 yılının 12 ayını ekle
+    for (let month = 0; month < 12; month++) {
+        const date = new Date(2026, month, 1);
+        const monthKey = `2026-${String(month + 1).padStart(2, '0')}`;
+        const monthName = date.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+
+        const option = document.createElement('option');
+        option.value = monthKey;
+        option.textContent = monthName;
+        monthFilter.appendChild(option);
+    }
+}
+
+// DASHBOARD AYLLIK FİLTRE
+function filterDashboardByMonth() {
+    const monthFilter = document.getElementById('dashboardMonthFilter');
+    if (!monthFilter) return;
+
+    const selectedMonth = monthFilter.value;
+    let filteredData = dashboardReceipts;
+
+    if (selectedMonth) {
+        // Seçilen aya göre filtrele
+        filteredData = dashboardReceipts.filter(receipt => {
+            const date = new Date(receipt.transaction_date);
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const receiptMonthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+            return receiptMonthKey === selectedMonth;
+        });
+    }
+
+    // Grafikler ve istatistikleri güncelle
+    updateStats(filteredData);
+    renderCharts(filteredData);
+}
+

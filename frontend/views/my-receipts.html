@@ -59,6 +59,7 @@
             font-size: 0.85rem;
             margin-top: 10px;
             display: inline-block;
+            color: #000;
         }
 
         .upload-container {
@@ -134,8 +135,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .receipt-result {
@@ -191,9 +197,17 @@
             font-size: 1.2rem;
         }
 
-        .bg-purple { background: #6C63FF; }
-        .bg-blue { background: #4D96FF; }
-        .bg-orange { background: #FF9F43; }
+        .bg-purple {
+            background: #6C63FF;
+        }
+
+        .bg-blue {
+            background: #4D96FF;
+        }
+
+        .bg-orange {
+            background: #FF9F43;
+        }
 
         .charts-grid {
             display: grid;
@@ -239,8 +253,13 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         .modal-content {
@@ -260,6 +279,7 @@
                 transform: translateY(-50px);
                 opacity: 0;
             }
+
             to {
                 transform: translateY(0);
                 opacity: 1;
@@ -465,6 +485,7 @@
             .charts-grid {
                 grid-template-columns: 1fr;
             }
+
             .item-edit-row {
                 grid-template-columns: 1fr;
             }
@@ -482,6 +503,10 @@
 
 <body>
 
+    <button id="themeToggle" onclick="window.darkMode.toggle()" title="Tema Değiştir">
+        <i class="fas fa-moon"></i>
+    </button>
+
     <div class="app-container">
         <nav class="sidebar">
             <div class="logo">
@@ -489,16 +514,16 @@
             </div>
             <ul class="menu">
                 <li class="active" onclick="switchTab('upload')">
-                    <i class="fas fa-cloud-upload-alt"></i> Fiş Yükle
+                    <i class="fas fa-cloud-upload-alt"></i><span>Yükle</span>
                 </li>
                 <li onclick="switchTab('receipts')">
-                    <i class="fas fa-list"></i> Fişlerim
+                    <i class="fas fa-list"></i><span>Fişler</span>
                 </li>
                 <li onclick="switchTab('dashboard')">
-                    <i class="fas fa-chart-pie"></i> Analizler
+                    <i class="fas fa-chart-pie"></i><span>Analiz</span>
                 </li>
                 <li onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> Çıkış
+                    <i class="fas fa-sign-out-alt"></i><span>Çıkış</span>
                 </li>
             </ul>
         </nav>
@@ -516,7 +541,8 @@
                         <i class="fas fa-file-image"></i>
                         <p>Resmi buraya sürükleyin veya seçin</p>
                         <input type="file" id="fileInput" accept="image/*" hidden>
-                        <button class="btn-primary" onclick="document.getElementById('fileInput').click()">Dosya Seç</button>
+                        <button class="btn-primary" onclick="document.getElementById('fileInput').click()">Dosya
+                            Seç</button>
                     </div>
                     <p id="fileName" class="file-name"></p>
 
@@ -543,6 +569,27 @@
                     <p>Fişlerinizi yönetin, mağaza adı, ürün ismi ve adetlerini düzenleyin.</p>
                 </header>
 
+                <!-- AY SEÇİMİ VE AYLLIK ÖZET -->
+                <div
+                    style="background: var(--white); padding: 20px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);">
+                    <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <label for="monthFilter"
+                                style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--secondary);">Aya
+                                Göre Filtrele</label>
+                            <select id="monthFilter" onchange="filterReceiptsByMonth()"
+                                style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; cursor: pointer; background: white;">
+                                <option value="">📅 Tüm Aylar (Hepsini Göster)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- AYLIK ÖZET KARTLARI -->
+                    <div id="monthlySummaryCards"
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                    </div>
+                </div>
+
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="Mağaza adı veya tarih ile ara...">
                     <button onclick="searchReceipts()">Ara</button>
@@ -567,6 +614,22 @@
                     <h1>Harcama Özetiniz</h1>
                     <p>Tüm harcamalarınızın grafiksel analizi.</p>
                 </header>
+
+                <!-- DASHBOARD AY SEÇİMİ -->
+                <div
+                    style="background: var(--white); padding: 15px 20px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);">
+                    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <label for="dashboardMonthFilter"
+                                style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--secondary);">Aya
+                                Göre Filtrele</label>
+                            <select id="dashboardMonthFilter" onchange="filterDashboardByMonth()"
+                                style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; cursor: pointer; background: white;">
+                                <option value="">📅 Tüm Aylar (Hepsini Göster)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -603,12 +666,7 @@
                     </div>
                 </div>
 
-                <div class="charts-grid" style="margin-top: 30px;">
-                    <div class="chart-container">
-                        <h3>Saatlerine Göre Ziyaretler</h3>
-                        <canvas id="hourlyChart"></canvas>
-                    </div>
-                </div>
+
             </div>
 
         </main>
@@ -641,13 +699,14 @@
             <!-- Ürünler Listesi (İsim ve Adet Düzenleme) -->
             <div class="items-list">
                 <label style="margin-bottom: 15px; display: block;">
-                    <i class="fas fa-box"></i> <strong>Ürünler (İsim ve Adet Düzenlenebilir)</strong>
+                    <i class="fas fa-box"></i> <strong>Ürünler</strong>
                 </label>
                 <div id="modalItems"></div>
             </div>
         </div>
     </div>
 
+    <script src="/js/darkMode.js"></script>
     <script src="/js/my-receipts.js"></script>
 </body>
 

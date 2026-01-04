@@ -90,9 +90,29 @@ async function getFromR2(key) {
     }
 }
 
+/**
+ * R2 URL'sinden key'i çıkar
+ * @param {string} photoUrl - R2 public URL (örn: https://bucket.account.r2.cloudflarestorage.com/users/123/profile.jpg)
+ * @returns {string} - R2 key (örn: users/123/profile.jpg)
+ */
+function extractR2KeyFromUrl(photoUrl) {
+    try {
+        // URL'nin son 3 bölümünü al (users/123/profile.jpg)
+        const urlParts = photoUrl.split('/');
+        if (urlParts.length >= 3) {
+            return urlParts.slice(-3).join('/');
+        }
+        return null;
+    } catch (error) {
+        console.error('R2 key çıkarma hatası:', error);
+        return null;
+    }
+}
+
 module.exports = {
     uploadToR2,
     deleteFromR2,
     getFromR2,
+    extractR2KeyFromUrl,
     s3Client
 };

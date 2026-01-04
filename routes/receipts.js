@@ -14,7 +14,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 module.exports = (pool, upload) => {
 
     // 1. Fiş Yükle ve Analiz Et
-    router.post('/api/receipts/analyze', upload.single('receiptImage'), verifyToken, async (req, res) => {
+    router.post('/api/receipts/analyze', upload.single('receiptImage'), verifyToken, async(req, res) => {
         const client = await pool.connect();
 
         try {
@@ -81,48 +81,42 @@ module.exports = (pool, upload) => {
                 if (data.merchant.tax_number) {
                     // Tax number ile kontrol et
                     let merchantRes = await client.query(
-                        `SELECT id FROM merchants WHERE tax_number = $1 LIMIT 1`,
-                        [data.merchant.tax_number]
+                        `SELECT id FROM merchants WHERE tax_number = $1 LIMIT 1`, [data.merchant.tax_number]
                     );
 
                     if (merchantRes.rows.length > 0) {
                         // Mağaza var, update et
                         merchantId = merchantRes.rows[0].id;
                         await client.query(
-                            `UPDATE merchants SET name = $1, branch = $2, address = $3 WHERE id = $4`,
-                            [data.merchant.name, data.merchant.branch, data.merchant.address, merchantId]
+                            `UPDATE merchants SET name = $1, branch = $2, address = $3 WHERE id = $4`, [data.merchant.name, data.merchant.branch, data.merchant.address, merchantId]
                         );
                     } else {
                         // Mağaza yok, insert et
                         merchantRes = await client.query(
                             `INSERT INTO merchants (name, branch, address, tax_number) 
                              VALUES ($1, $2, $3, $4) 
-                             RETURNING id`,
-                            [data.merchant.name, data.merchant.branch, data.merchant.address, data.merchant.tax_number]
+                             RETURNING id`, [data.merchant.name, data.merchant.branch, data.merchant.address, data.merchant.tax_number]
                         );
                         merchantId = merchantRes.rows[0].id;
                     }
                 } else {
                     // Name + Branch ile kontrol et
                     let merchantRes = await client.query(
-                        `SELECT id FROM merchants WHERE name = $1 AND branch = $2 LIMIT 1`,
-                        [data.merchant.name, data.merchant.branch]
+                        `SELECT id FROM merchants WHERE name = $1 AND branch = $2 LIMIT 1`, [data.merchant.name, data.merchant.branch]
                     );
 
                     if (merchantRes.rows.length > 0) {
                         // Mağaza var, update et
                         merchantId = merchantRes.rows[0].id;
                         await client.query(
-                            `UPDATE merchants SET address = $1 WHERE id = $2`,
-                            [data.merchant.address, merchantId]
+                            `UPDATE merchants SET address = $1 WHERE id = $2`, [data.merchant.address, merchantId]
                         );
                     } else {
                         // Mağaza yok, insert et
                         merchantRes = await client.query(
                             `INSERT INTO merchants (name, branch, address, tax_number) 
                              VALUES ($1, $2, $3, $4) 
-                             RETURNING id`,
-                            [data.merchant.name, data.merchant.branch, data.merchant.address, null]
+                             RETURNING id`, [data.merchant.name, data.merchant.branch, data.merchant.address, null]
                         );
                         merchantId = merchantRes.rows[0].id;
                     }
@@ -132,20 +126,32 @@ module.exports = (pool, upload) => {
             // B. Fişi Kaydet
             const receiptRes = await client.query(
                 `INSERT INTO receipts 
-                 (user_id, merchant_id, transaction_date, transaction_time, receipt_no, total_amount, total_tax, payment_method, image_url, raw_api_response)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-                 RETURNING id`,
-                [
+     (user_id, merchant_id, transaction_date, transaction_time, receipt_no, total_amount, total_tax, payment_method, image_url, raw_api_response)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+     RETURNING id`, [
                     userId,
                     merchantId,
-                    data.transaction?.date || null,
-                    data.transaction?.time || null,
-                    data.transaction?.receipt_no || null,
-                    data.financials?.total_amount || 0,
-                    data.financials?.total_tax || 0,
-                    data.financials?.payment_method || 'Nakit',
+                    (data.transaction && data.transaction.date) ? data.transaction.date : null,
+                    (data.transaction && data.transaction.time) ? data.transaction.time : null,
+                    (data.transaction && data.transaction.receipt_no) ? data.transaction.receipt_no : null,
+                    (data.financials && data.financials.total_amount) ? data.financials.total_amount : 0,
+                    (data.financials && data.financials.total_tax) ? data.financials.total_tax : 0,
+                    (data.financials && data.financials.payment_method) ? data.financials.payment_method : 'Nakit',
                     imageUrl,
                     JSON.stringify(data)
+                    // ya kanzi burada aşağıdaki gibi kullanabilirsin ama compiler hata veriyor kafayı yedi ben de anlamadım haberin olsun 
+                    /*
+                    userId,
+                    merchantId,
+                    data.transaction?.date || null,       // Boşluk kaldırıldı
+                    data.transaction?.time || null,       // Boşluk kaldırıldı
+                    data.transaction?.receipt_no || null, // Boşluk kaldırıldı
+                    data.financials?.total_amount || 0,   // Boşluk kaldırıldı
+                    data.financials?.total_tax || 0,      // Boşluk kaldırıldı
+                    data.financials?.payment_method || 'Nakit', // Boşluk kaldırıldı
+                    imageUrl,
+                    JSON.stringify(data)
+                     */
                 ]
             );
             const receiptId = receiptRes.rows[0].id;
@@ -155,8 +161,7 @@ module.exports = (pool, upload) => {
                 for (const item of data.items) {
                     await client.query(
                         `INSERT INTO receipt_items (receipt_id, item_name, quantity, unit_price, total_price)
-                         VALUES ($1, $2, $3, $4, $5)`,
-                        [receiptId, item.name, item.quantity || 1, item.price || 0, item.total || item.price]
+                                                             VALUES ($1, $2, $3, $4, $5)`, [receiptId, item.name, item.quantity || 1, item.price || 0, item.total || item.price]
                     );
                 }
             }
@@ -175,21 +180,21 @@ module.exports = (pool, upload) => {
     });
 
     // 2. Kullanıcının Fişlerini Listele
-    router.get('/api/receipts/my-receipts', verifyToken, async (req, res) => {
+    router.get('/api/receipts/my-receipts', verifyToken, async(req, res) => {
         try {
             const userId = req.user.id;
             const result = await pool.query(`
-                SELECT r.*,
-                       m.name as merchant_name, 
-                       COUNT(ri.id) as item_count,
-                       COALESCE(SUM(ri.quantity), 0) as total_quantity
-                FROM receipts r
-                LEFT JOIN merchants m ON r.merchant_id = m.id
-                LEFT JOIN receipt_items ri ON r.id = ri.receipt_id
-                WHERE r.user_id = $1
-                GROUP BY r.id, m.name
-                ORDER BY r.created_at DESC
-            `, [userId]);
+                                                    SELECT r.*,
+                                                           m.name as merchant_name,
+                                                           COUNT(ri.id) as item_count,
+                                                           COALESCE(SUM(ri.quantity), 0) as total_quantity
+                                                    FROM receipts r
+                                                    LEFT JOIN merchants m ON r.merchant_id = m.id
+                                                    LEFT JOIN receipt_items ri ON r.id = ri.receipt_id
+                                                    WHERE r.user_id = $1
+                                                    GROUP BY r.id, m.name
+                                                    ORDER BY r.created_at DESC
+                                                `, [userId]);
 
             res.json(result.rows);
         } catch (error) {
@@ -199,14 +204,13 @@ module.exports = (pool, upload) => {
     });
 
     // 3. Tek Fiş Detayları ve Ürünlerini Getir
-    router.get('/api/receipts/:receiptId', verifyToken, async (req, res) => {
+    router.get('/api/receipts/:receiptId', verifyToken, async(req, res) => {
         try {
             const userId = req.user.id;
             const receiptId = req.params.receiptId;
 
             const receiptCheck = await pool.query(
-                `SELECT * FROM receipts WHERE id = $1 AND user_id = $2`,
-                [receiptId, userId]
+                `SELECT * FROM receipts WHERE id = $1 AND user_id = $2`, [receiptId, userId]
             );
 
             if (receiptCheck.rows.length === 0) {
@@ -215,15 +219,13 @@ module.exports = (pool, upload) => {
 
             const receipt = await pool.query(
                 `SELECT r.*, m.name as merchant_name
-                 FROM receipts r
-                 LEFT JOIN merchants m ON r.merchant_id = m.id
-                 WHERE r.id = $1`,
-                [receiptId]
+                                                     FROM receipts r
+                                                     LEFT JOIN merchants m ON r.merchant_id = m.id
+                                                     WHERE r.id = $1`, [receiptId]
             );
 
             const items = await pool.query(
-                `SELECT * FROM receipt_items WHERE receipt_id = $1 ORDER BY id`,
-                [receiptId]
+                `SELECT * FROM receipt_items WHERE receipt_id = $1 ORDER BY id`, [receiptId]
             );
 
             res.json({
@@ -237,7 +239,7 @@ module.exports = (pool, upload) => {
     });
 
     // 4. YENİ: Mağaza Adını Güncelle
-    router.put('/api/receipts/:receiptId/merchant', verifyToken, async (req, res) => {
+    router.put('/api/receipts/:receiptId/merchant', verifyToken, async(req, res) => {
         try {
             const userId = req.user.id;
             const receiptId = req.params.receiptId;
@@ -249,8 +251,7 @@ module.exports = (pool, upload) => {
 
             // Fiş sahibi kontrol et
             const receiptCheck = await pool.query(
-                `SELECT merchant_id FROM receipts WHERE id = $1 AND user_id = $2`,
-                [receiptId, userId]
+                `SELECT merchant_id FROM receipts WHERE id = $1 AND user_id = $2`, [receiptId, userId]
             );
 
             if (receiptCheck.rows.length === 0) {
@@ -261,8 +262,7 @@ module.exports = (pool, upload) => {
 
             // Mağaza adını güncelle
             const result = await pool.query(
-                `UPDATE merchants SET name = $1 WHERE id = $2 RETURNING *`,
-                [merchant_name.trim(), merchantId]
+                `UPDATE merchants SET name = $1 WHERE id = $2 RETURNING *`, [merchant_name.trim(), merchantId]
             );
 
             if (result.rows.length === 0) {
@@ -277,7 +277,7 @@ module.exports = (pool, upload) => {
     });
 
     // 5. GÜNCELLENMIŞ: Ürün İsmini ve Adedini Güncelle
-    router.put('/api/receipts/:receiptId/items/:itemId', verifyToken, async (req, res) => {
+    router.put('/api/receipts/:receiptId/items/:itemId', verifyToken, async(req, res) => {
         try {
             const userId = req.user.id;
             const receiptId = req.params.receiptId;
@@ -286,8 +286,7 @@ module.exports = (pool, upload) => {
 
             // Fiş sahibi kontrol et
             const receiptCheck = await pool.query(
-                `SELECT * FROM receipts WHERE id = $1 AND user_id = $2`,
-                [receiptId, userId]
+                `SELECT * FROM receipts WHERE id = $1 AND user_id = $2`, [receiptId, userId]
             );
 
             if (receiptCheck.rows.length === 0) {
@@ -337,15 +336,14 @@ module.exports = (pool, upload) => {
     });
 
     // 6. FİŞ SİL (Sadece fiş sahibi veya admin)
-    router.delete('/api/receipts/:receiptId', verifyToken, async (req, res) => {
+    router.delete('/api/receipts/:receiptId', verifyToken, async(req, res) => {
         try {
             const userId = req.user.id;
             const receiptId = req.params.receiptId;
 
             // Fiş sahibi mi kontrol et
             const receiptCheck = await pool.query(
-                `SELECT image_url FROM receipts WHERE id = $1 AND user_id = $2`,
-                [receiptId, userId]
+                `SELECT image_url FROM receipts WHERE id = $1 AND user_id = $2`, [receiptId, userId]
             );
 
             if (receiptCheck.rows.length === 0) {
@@ -374,7 +372,7 @@ module.exports = (pool, upload) => {
     });
 
     // 7. ADMİN: TÜM FİŞLERİ LİSTELE
-    router.get('/api/admin/receipts', verifyToken, async (req, res) => {
+    router.get('/api/admin/receipts', verifyToken, async(req, res) => {
         try {
             // Admin kontrolü
             if (!req.user.isAdmin) {
@@ -382,17 +380,17 @@ module.exports = (pool, upload) => {
             }
 
             const result = await pool.query(`
-                SELECT r.*, 
-                       u.username as user_name,
-                       m.name as merchant_name, 
-                       COUNT(ri.id) as item_count
-                FROM receipts r
-                LEFT JOIN users u ON r.user_id = u.id
-                LEFT JOIN merchants m ON r.merchant_id = m.id
-                LEFT JOIN receipt_items ri ON r.id = ri.receipt_id
-                GROUP BY r.id, u.username, m.name
-                ORDER BY r.created_at DESC
-            `);
+                                                    SELECT r.*, 
+                                                           u.username as user_name,
+                                                           m.name as merchant_name, 
+                                                           COUNT(ri.id) as item_count
+                                                    FROM receipts r
+                                                    LEFT JOIN users u ON r.user_id = u.id
+                                                    LEFT JOIN merchants m ON r.merchant_id = m.id
+                                                    LEFT JOIN receipt_items ri ON r.id = ri.receipt_id
+                                                    GROUP BY r.id, u.username, m.name
+                                                    ORDER BY r.created_at DESC
+                                                `);
 
             res.json(result.rows);
         } catch (error) {
