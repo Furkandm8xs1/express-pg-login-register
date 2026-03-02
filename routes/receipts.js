@@ -40,16 +40,6 @@ module.exports = (pool, upload) => {
                 }
             `;
 
-            // Buffer'ı base64'e çevir 
-
-            const base64Image = req.file.buffer.toString('base64');
-            const imagePart = {
-                inlineData: {
-                    data: base64Image,
-                    mimeType: req.file.mimetype
-                }
-            };
-
             const result = await model.generateContent([prompt, imagePart]);
             const response = await result.response;
             let text = response.text();
