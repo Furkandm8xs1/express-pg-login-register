@@ -1,8 +1,8 @@
 // --- AYARLAR ---
 const API_BASE = 'http://localhost:3000/api';
 
-// GÜVENLİK GÜNCELLEMESİ: 
-// CURRENT_USER_ID değişkenini sildik. 
+// GÜVENLİK GÜNCELLEMESİ:
+// CURRENT_USER_ID değişkenini sildik.
 // Kimlik bilgisi artık Cookie içinde gizli ve otomatik gidiyor.
 
 
@@ -72,7 +72,7 @@ async function uploadReceipt() {
         const response = await fetch(`${API_BASE}/receipts/analyze`, {
             method: 'POST',
             body: formData,
-            credentials: 'include' 
+            credentials: 'include'
         });
 
          /*Eğer oturum süresi dolmuşsa:

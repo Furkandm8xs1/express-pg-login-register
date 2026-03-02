@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Furkan - Özgeçmiş / CV</title>
+    <style>
+        :root {
+            --bg-color: #f4f4f9;
+            --text-color: #333;
+            --container-bg: #fff;
+            --primary-color: #0056b3;
+            --border-color: #ddd;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --container-bg: #1e1e1e;
+            --primary-color: #4da3ff;
+            --border-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: var(--container-bg);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+            position: relative;
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 2.5em;
+        }
+
+        .contact-info {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .contact-info li a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .contact-info li a:hover {
+            color: var(--primary-color);
+        }
+
+        section {
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        .project-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-top: 15px;
+        }
+
+        /* Buton Stilleri */
+        .controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: opacity 0.3s;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        /* Dil Yönetimi (CSS ile Göster/Gizle) */
+        .en {
+            display: none;
+        }
+
+        [data-language="en"] .tr {
+            display: none;
+        }
+
+        [data-language="en"] .en {
+            display: block;
+        }
+
+        [data-language="en"] span.en {
+            display: inline;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 20px;
+                padding: 20px;
+                padding-top: 60px; /* Butonlar için boşluk */
+            }
+            .contact-info {
+                flex-direction: column;
+                gap: 5px;
+            }
+            .controls {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div class="controls">
+            <button class="btn" id="langToggle">English</button>
+            <button class="btn" id="themeToggle"><span class="tr">Karanlık Mod</span><span class="en">Dark Mode</span></button>
+        </div>
+
+        <header>
+            <h1>Furkan Ali Çetin <span class="tr">[Soyadın]</span><span class="en">[Last Name]</span></h1>
+            <ul class="contact-info">
+                <li>📞 0-533-373-09-04</li>
+                <li>📧 <a href="mailto:email@adresin.com">cetinfurkanali1@gmail.com</a></li>
+                <li>💼 <a href="#" target="_blank">LinkedIn</a></li>
+                <li>💻 <a href="#" target="_blank">GitHub</a></li>
+                <li>📍 Istanbul, <span class="tr">Türkiye</span><span class="en">Turkey</span></li>
+            </ul>
+        </header>
+
+        <section id="summary">
+            <h2 class="tr">Özet</h2>
+            <h2 class="en">Summary</h2>
+            
+            <p class="tr">Marmara Üniversitesi Bilgisayar Mühendisliği 2. sınıf öğrencisi. Modern web teknolojileri, veritabanı yönetimi ve yapay zeka entegrasyonları konularında proje geliştirme deneyimine sahip. Problem çözme odaklı, temiz kod yazmaya özen gösteren ve freelance projelerde değer üretmeye hazır bir geliştirici.</p>
+            <p class="en">2nd-year Computer Engineering student at Marmara University. Experienced in developing projects utilizing modern web technologies, database management, and AI integrations. A problem-solving oriented developer who values writing clean code and is ready to deliver value in freelance projects.</p>
+        </section>
+
+        <section id="education">
+            <h2 class="tr">Eğitim</h2>
+            <h2 class="en">Education</h2>
+
+            <p class="tr"><strong>Marmara Üniversitesi</strong> — Bilgisayar Mühendisliği (Lisans)<br>
+            <em>[Yıl] | 2. Sınıf Öğrencisi</em></p>
+            
+            <p class="en"><strong>Marmara University</strong> — Computer Engineering (Bachelor's)<br>
+            <em> [Year] | 2nd Year Student</em></p>
+        </section>
+
+        <section id="skills">
+            <h2 class="tr">Teknik Yetenekler</h2>
+            <h2 class="en">Technical Skills</h2>
+
+            <ul>
+                <li><strong class="tr">Programlama Dilleri:</strong><strong class="en">Programming Languages:</strong> JavaScript, Java, C, Python</li>
+                <li><strong class="tr">Web & Backend:</strong><strong class="en">Web & Backend:</strong> Node.js</li>
+                <li><strong class="tr">Veritabanı & Depolama:</strong><strong class="en">Database & Storage:</strong> PostgreSQL, Cloudflare R2</li>
+                <li><strong class="tr">Araçlar & Teknolojiler:</strong><strong class="en">Tools & Technologies:</strong> Git, JWT (JSON Web Tokens)</li>
+                <li><strong class="tr">Temel Yetkinlikler:</strong><strong class="en">Core Competencies:</strong> <span class="tr">Veri Yapıları ve Algoritmalar, Web Güvenliği (Auth/Yetkilendirme), Nesne Yönelimli Programlama (OOP)</span><span class="en">Data Structures and Algorithms, Web Security (Auth/Authorization), Object-Oriented Programming (OOP)</span></li>
+            </ul>
+        </section>
+
+        <section id="projects">
+            <h2 class="tr">Projeler</h2>
+            <h2 class="en">Projects</h2>
+            
+            <div class="project-title tr">Yapay Zeka Destekli Fiş Yönetim Web Uygulaması</div>
+            <div class="project-title en">AI-Powered Receipt Management Web Application</div>
+            <ul>
+                <li class="tr">Kullanıcıların yüklediği alışveriş fişlerini yapay zeka yardımıyla analiz edip JSON formatında veriye dönüştüren bir sistem geliştirildi.</li>
+                <li class="en">Developed a system that analyzes user-uploaded shopping receipts using AI and converts them into structured JSON format.</li>
+                <li class="tr">Kullanıcıların hangi tarihte, hangi marketten ne kadarlık alışveriş yaptığını gösteren bir arayüz tasarlandı.</li>
+                <li class="en">Designed an interface displaying the date, supermarket, and total amount of users' purchases.</li>
+            </ul>
+
+            <div class="project-title tr">Güvenli Kullanıcı Doğrulama (Auth) Sistemi</div>
+            <div class="project-title en">Secure User Authentication System</div>
+            <ul>
+                <li class="tr">Node.js ve PostgreSQL kullanılarak, güvenli giriş/kayıt (login/register) altyapısına sahip full-stack bir web projesi geliştirildi.</li>
+                <li class="en">Developed a full-stack web project with a secure login/register infrastructure using Node.js and PostgreSQL.</li>
+                <li class="tr">Kullanıcı yetkilendirme ve güvenlik işlemleri için JWT (JSON Web Tokens) entegre edildi.</li>
+                <li class="en">Integrated JWT (JSON Web Tokens) for robust user authorization and security operations.</li>
+            </ul>
+        </section>
+
+        <section id="languages">
+            <h2 class="tr">Diller</h2>
+            <h2 class="en">Languages</h2>
+            <ul>
+                <li><span class="tr">Türkçe (Anadil)</span><span class="en">Turkish (Native)</span></li>
+                <li><span class="tr">İngilizce [B1]</span><span class="en">English ([Specify Level, e.g., B2 / Upper-Intermediate])</span></li>
+            </ul>
+        </section>
+    </div>
+
+    <script>
+        // Tema (Dark/Light) Yönetimi
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const body = document.body;
+
+        themeToggleBtn.addEventListener('click', () => {
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+            }
+        });
+
+        // Dil (TR/EN) Yönetimi
+        const langToggleBtn = document.getElementById('langToggle');
+        
+        langToggleBtn.addEventListener('click', () => {
+            if (body.getAttribute('data-language') === 'en') {
+                body.removeAttribute('data-language');
+                document.documentElement.lang = 'tr';
+                langToggleBtn.textContent = 'English';
+            } else {
+                body.setAttribute('data-language', 'en');
+                document.documentElement.lang = 'en';
+                langToggleBtn.textContent = 'Türkçe';
+            }
+        });
+    </script>
+
+</body>
+</html>

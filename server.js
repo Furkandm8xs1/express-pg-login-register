@@ -50,6 +50,8 @@ const resetPasswordRoutes = require('./routes/reset-password')(pool);
 const messageRoutes = require('./routes/messages')(pool);
 // YENİ EKLENDİ: Fiş route'unu import et
 const receiptRoutes = require('./routes/receipts')(pool, upload);
+// YENİ: Abonelik route'larını import et
+const subscriptionRoutes = require('./routes/subscriptions')(pool);
 
 // --- ROUTE KULLANIMLARI ---
 app.use('/', pageRoutes);
@@ -57,8 +59,8 @@ app.use('/', authRoutes);
 app.use('/', userRoutes);
 app.use('/', resetPasswordRoutes);
 app.use('/', messageRoutes);
-// YENİ EKLENDİ: Fiş route'unu kullan
 app.use('/', receiptRoutes);
+app.use('/', subscriptionRoutes);
 
 
 app.listen(PORT, '0.0.0.0', () => {

@@ -193,5 +193,79 @@ module.exports = function(pool) {
         }
     });
 
+    // AYLИК ABONELIK VE HARCAMA VERİLERİ
+    router.get("/user/:id/monthly-spending", verifyToken, validateUserId, requireOwnerOrAdmin, async(req, res) => {
+        const userId = parseInt(req.params.id);
+
+        try {
+            // Son 12 ay için kategori/sektor bazında harcamaları getir
+            const result = await pool.query(`
+                SELECT 
+                    TO_CHAR(transaction_date, 'YYYY-MM') as month,
+                    COALESCE(sector, 'Diğer') as sector,
+                    SUM(total_amount) as total_amount,
+                    COUNT(*) as transaction_count
+                FROM receipts
+                WHERE user_id = $1 
+                AND transaction_date >= NOW() - INTERVAL '12 months'
+                GROUP BY TO_CHAR(transaction_date, 'YYYY-MM'), COALESCE(sector, 'Diğer')
+                ORDER BY month DESC, total_amount DESC
+            `, [userId]);
+
+            if (result.rows.length === 0) {
+                return res.json({
+                    message: "Bu kullanıcının harcama verisi yok",
+                    data: []
+                });
+            }
+
+            // Veriyi ay ve sektor bazında düzenle
+            const monthlyData = {};
+            result.rows.forEach(row => {
+                if (!monthlyData[row.month]) {
+                    monthlyData[row.month] = {
+                        month: row.month,
+                        categories: [],
+                        total: 0
+                    };
+                }
+                monthlyData[row.month].categories.push({
+                    sector: row.sector || 'Diğer',
+                    amount: parseFloat(row.total_amount),
+                    count: row.transaction_count
+                });
+                monthlyData[row.month].total += parseFloat(row.total_amount);
+            });
+
+            // Son 12 ayın özet verisi
+            const summaryResult = await pool.query(`
+                SELECT 
+                    COALESCE(sector, 'Diğer') as sector,
+                    SUM(total_amount) as total_amount,
+                    AVG(total_amount) as avg_amount,
+                    COUNT(*) as transaction_count
+                FROM receipts
+                WHERE user_id = $1 
+                AND transaction_date >= NOW() - INTERVAL '12 months'
+                GROUP BY COALESCE(sector, 'Diğer')
+                ORDER BY total_amount DESC
+            `, [userId]);
+
+            res.json({
+                monthly: Object.values(monthlyData),
+                summary: summaryResult.rows.map(row => ({
+                    sector: row.sector || 'Diğer',
+                    total: parseFloat(row.total_amount),
+                    average: parseFloat(row.avg_amount),
+                    count: row.transaction_count
+                }))
+            });
+
+        } catch (error) {
+            console.error('Monthly spending hatası:', error);
+            res.status(500).json({ error: "Sunucu hatası: " + error.message });
+        }
+    });
+
     return router;
 };

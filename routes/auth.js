@@ -146,19 +146,15 @@ module.exports = (pool) => {
 
       const token = generateToken(tokenPayload);
 
-
-
       res.json({
         message: "Giriş başarılı",
         token: token
       });
 
-
-
     } catch (error) {
-      console.error('Login hatası:', error);
-      res.status(500).json({ error: "Sunucu hatası" });
-      console.log("burda bir hata var");
+      console.error('❌ Login hatası detayı:', error.message);
+      console.error('Full Error:', error);
+      res.status(500).json({ error: "Sunucu hatası", details: error.message });
     }
   });
 

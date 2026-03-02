@@ -4,10 +4,6 @@ const router = express.Router();
 const { requirePageAuth, redirectIfLoggedIn, requireAdminPage } = require('../utils/authMiddleware');
 
 
-
-
-
-
 router.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/views/index.html"));
 });
@@ -23,7 +19,7 @@ router.get("/register", redirectIfLoggedIn, (req, res) => {
 });
 
 // Profile sayfası
-//bunu test amaçlı degiştirdim ona  gore
+//bunu test amaçlı degiştirdim ona  gore  
 
 router.get("/profile", requirePageAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/views/profile.html"));
@@ -44,7 +40,7 @@ router.get("/reset-password", requirePageAuth, (req, res) => {
 });
 
 // Forgot password sayfası
-router.get("/forgot-password", requirePageAuth, (req, res) => {
+router.get("/forgot-password", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/views/forgot-password.html"));
 });
 
@@ -61,8 +57,15 @@ router.get("/receipt", requirePageAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/views/my-receipts.html"));
 });
 
+
+router.get("/subscriptions", requirePageAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/views/subscriptions.html"));
+});
+
 router.get("/my-receipts", requirePageAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/views/my-receipts.html"));
 });
+
+
 
 module.exports = router;

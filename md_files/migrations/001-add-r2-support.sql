@@ -5,7 +5,7 @@
 
 -- Yeni image_url kolonu ekle (henüz image_path varsa)
 ALTER TABLE receipts 
-ADD COLUMN image_url VARCHAR(500) NULLABLE;
+ADD COLUMN IF NOT EXISTS image_url VARCHAR(500) DEFAULT NULL;
 
 -- Eğer image_path'i bir R2 URL'sine dönüştürmek istiyorsan:
 -- UPDATE receipts SET image_url = 'https://your_bucket.r2.cloudflarestorage.com/receipts/' || image_path

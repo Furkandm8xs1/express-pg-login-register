@@ -3,5 +3,20 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": []
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Solution",
+            "request": "launch",
+            "mainClass": "Solution",
+            "projectName": "bill project_5b697d38"
+        },
+        {
+            "type": "java",
+            "name": "furkan",
+            "request": "launch",
+            "mainClass": "furkan",
+            "projectName": "bill project_5b697d38"
+        }
+    ]
 }

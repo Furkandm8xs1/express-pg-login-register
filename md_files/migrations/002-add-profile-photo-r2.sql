@@ -6,10 +6,10 @@
 
 -- Adım 1: profile_photo kolonu ekle
 ALTER TABLE users 
-ADD COLUMN profile_photo VARCHAR(500) DEFAULT NULL;
+ADD COLUMN IF NOT EXISTS profile_photo VARCHAR(500) DEFAULT NULL;
 
 -- Adım 2: Kolon indexleme (opsiyonel ama önerilen)
--- CREATE INDEX idx_users_profile_photo ON users(profile_photo);
+CREATE INDEX IF NOT EXISTS idx_users_profile_photo ON users(profile_photo);
 
 -- ✅ Tamamlandı!
 -- Sonrası: Artık profil fotoğrafları R2'de saklanacak ve URL'leri users.profile_photo'da tutulacak
