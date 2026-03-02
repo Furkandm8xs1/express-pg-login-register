@@ -65,12 +65,20 @@ module.exports = function(pool) {
           </div>
         `
       };
-      await transporter.sendMail(mailOptions);
-
-      res.json({ 
-        success: true, 
-        message: 'Şifre sıfırlama linki email adresinize gönderildi' 
-      });
+      
+      try {
+        await transporter.sendMail(mailOptions);
+        res.json({ 
+          success: true, 
+          message: 'Şifre sıfırlama linki email adresinize gönderildi' 
+        });
+      } catch (emailError) {
+        console.error('📧 Mail gönderme hatası:', emailError);
+        res.status(500).json({ 
+          message: 'Mail gönderilemedi. Lütfen .env dosyasında Gmail ayarlarını kontrol edin.',
+          error: emailError.message
+        });
+      }
 
     } catch (error) {
       console.error('Şifre sıfırlama hatası:', error);
