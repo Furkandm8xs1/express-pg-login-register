@@ -498,6 +498,203 @@
         .section.active {
             display: block;
         }
+
+        /* ABONELİKLER SEKMESİ STİLLERİ */
+        .subscriptions-header {
+            margin-bottom: 25px;
+        }
+
+        .subscriptions-header h1 {
+            margin: 0 0 8px 0;
+            color: var(--secondary);
+        }
+
+        .subscriptions-header p {
+            margin: 0;
+            color: #666;
+        }
+
+        .subscriptions-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+            gap: 24px;
+        }
+
+        .subscriptions-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 20px 22px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .subscriptions-card h2 {
+            margin: 0 0 16px 0;
+            font-size: 1.2rem;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .subscriptions-summary {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .summary-pill {
+            flex: 1;
+            min-width: 180px;
+            background: #f5f7fb;
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .summary-pill span.label {
+            font-size: 0.85rem;
+            color: #777;
+        }
+
+        .summary-pill span.value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .subscription-form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-top: 8px;
+            margin-bottom: 16px;
+        }
+
+        .subscription-form-grid label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            color: var(--secondary);
+            font-weight: 600;
+        }
+
+        .subscription-form-grid input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            font-size: 0.95rem;
+        }
+
+        .subscription-form-grid input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.15);
+        }
+
+        .subscriptions-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .subscriptions-table-wrapper {
+            margin-top: 8px;
+            border-radius: 12px;
+            border: 1px solid #eceff5;
+            overflow: hidden;
+        }
+
+        table.subscriptions-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        table.subscriptions-table thead {
+            background: #f7f8fc;
+        }
+
+        table.subscriptions-table th,
+        table.subscriptions-table td {
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        table.subscriptions-table th {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #888;
+        }
+
+        table.subscriptions-table tbody tr:nth-child(even) {
+            background: #fafbff;
+        }
+
+        table.subscriptions-table input[type="text"],
+        table.subscriptions-table input[type="number"] {
+            width: 100%;
+            padding: 7px 8px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            font-size: 0.9rem;
+        }
+
+        table.subscriptions-table input[type="text"]:focus,
+        table.subscriptions-table input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-small {
+            border: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-save {
+            background: #22c55e;
+            color: #fff;
+        }
+
+        .btn-save:hover {
+            opacity: 0.9;
+        }
+
+        .btn-delete {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .btn-delete:hover {
+            background: #fecaca;
+        }
+
+        .subscriptions-error {
+            margin-top: 10px;
+            color: #b91c1c;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 900px) {
+            .subscriptions-layout {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
     </style>
 </head>
 
@@ -522,8 +719,8 @@
                 <li onclick="switchTab('dashboard')">
                     <i class="fas fa-chart-pie"></i><span>Analiz</span>
                 </li>
-                <li onclick="window.location.href='/subscriptions'">
-                    <i class="fas fa-chart-pie"></i><span>Abonelikler</span>
+                <li onclick="switchTab('subscriptions')">
+                    <i class="fas fa-calendar-alt"></i><span>Abonelikler</span>
                 </li>
                 <li onclick="logout()">
                     <i class="fas fa-sign-out-alt"></i><span>Çıkış</span>
@@ -672,6 +869,85 @@
 
             </div>
 
+            <!-- ABONELİKLER SEKMESİ -->
+            <div id="subscriptions-section" class="section" style="display: none;">
+                <section class="subscriptions-header">
+                    <h1>Aylık Aboneliklerim</h1>
+                    <p>Tüm aboneliklerinizi tek yerde yönetin ve toplam aylık tutarınızı görün.</p>
+                </section>
+
+                <div class="subscriptions-layout">
+                    <!-- Sol: Liste ve toplam özet -->
+                    <div class="subscriptions-card">
+                        <h2><i class="fas fa-layer-group"></i> Abonelik Özeti</h2>
+                        <div class="subscriptions-summary">
+                            <div class="summary-pill">
+                                <span class="label">Toplam Aylık Tutar</span>
+                                <span class="value" id="totalMonthlyCost">0 ₺</span>
+                            </div>
+                            <div class="summary-pill">
+                                <span class="label">Abonelik Sayısı</span>
+                                <span class="value" id="totalSubscriptions">0</span>
+                            </div>
+                        </div>
+
+                        <div class="subscriptions-table-wrapper" id="subscriptionsTableWrapper">
+                            <table class="subscriptions-table">
+                                <thead>
+                                    <tr>
+                                        <th>Ad</th>
+                                        <th>Aylık Fiyat (₺)</th>
+                                        <th>Fatura Günü</th>
+                                        <th>Kategori</th>
+                                        <th style="width: 140px;">İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="subscriptionsTbody">
+                                </tbody>
+                            </table>
+                            <div class="empty-state" id="subscriptionsEmptyState">
+                                <i class="fas fa-inbox"></i>
+                                Henüz abonelik eklenmemiş. Sağ taraftaki formdan ilk aboneliğinizi ekleyin.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sağ: Yeni abonelik ekleme formu -->
+                    <div class="subscriptions-card">
+                        <h2><i class="fas fa-plus-circle"></i> Yeni Abonelik Ekle</h2>
+                        <div class="subscription-form-grid">
+                            <div>
+                                <label for="subscriptionName">Abonelik Adı</label>
+                                <input type="text" id="subscriptionName" placeholder="Örn: Netflix, Spotify">
+                            </div>
+                            <div>
+                                <label for="subscriptionPrice">Aylık Fiyat (₺)</label>
+                                <input type="number" id="subscriptionPrice" min="0" step="0.01"
+                                    placeholder="Örn: 149.90">
+                            </div>
+                            <div>
+                                <label for="subscriptionDay">Fatura Günü</label>
+                                <input type="number" id="subscriptionDay" min="1" max="31" placeholder="1 - 31">
+                            </div>
+                            <div>
+                                <label for="subscriptionCategory">Kategori (Opsiyonel)</label>
+                                <input type="text" id="subscriptionCategory" placeholder="Örn: Eğlence, İnternet">
+                            </div>
+                        </div>
+
+                        <div class="subscriptions-actions">
+                            <button class="btn-secondary" type="button" onclick="resetSubscriptionForm()">
+                                Temizle
+                            </button>
+                            <button class="btn-primary" type="button" onclick="createSubscription()">
+                                <i class="fas fa-save"></i> Kaydet
+                            </button>
+                        </div>
+                        <div class="subscriptions-error" id="subscriptionsError" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -711,6 +987,7 @@
 
     <script src="/js/darkMode.js"></script>
     <script src="/js/my-receipts.js"></script>
+    <script src="/js/subscriptions.js"></script>
 </body>
 
 </html>
