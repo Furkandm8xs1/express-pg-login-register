@@ -622,17 +622,35 @@ function updateStats(receipts) {
     `).join('');
 }
 
+function normalizeMerchantName(rawName) {
+    let name = (rawName || 'Diğer').toLowerCase().trim();
+
+    // Nokta ve virgülleri kaldır
+    name = name.replace(/[.,]/g, '');
+
+    // Birden fazla boşluğu tek boşluğa indir
+    name = name.replace(/\s+/g, ' ');
+
+    // Şirket son eklerini kaldır (a.ş., a.s., aş, as vb.)
+    name = name.replace(/\b(a\.?\s*ş\.?|a\.?\s*s\.?|aş|as)\b$/g, '').trim();
+
+    // Türkçe karakterleri sadeleştir
+    const map = { 'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u' };
+    name = name.replace(/[çğıöşü]/g, ch => map[ch] || ch);
+
+    // İlk harfi büyük yap
+    if (!name) name = 'diğer';
+    name = name.charAt(0).toUpperCase() + name.slice(1);
+    return name;
+}
+
 function renderCharts(receipts) {
     const ctx = document.getElementById('merchantChart').getContext('2d');
 
     // Veriyi Hazırla - İsim normalizasyonu
     const merchantSpending = {};
     receipts.forEach(r => {
-        // Normalizasyon: trim, lowercase, ve ard arda boşlukları temizle
-        let name = (r.merchant_name || 'Diğer').trim().toLowerCase();
-        name = name.replace(/\s+/g, ' '); // Ard arda boşlukları tek boşluğa çevir
-        // İlk harfi büyük yap
-        name = name.charAt(0).toUpperCase() + name.slice(1);
+        const name = normalizeMerchantName(r.merchant_name);
         merchantSpending[name] = (merchantSpending[name] || 0) + Number(r.total_amount);
     });
 
