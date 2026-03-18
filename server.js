@@ -11,8 +11,13 @@ const multer = require('multer');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Multer konfigürasyonu (bellek içinde depolama)
-const upload = multer({ storage: multer.memoryStorage() });
+// Multer konfigürasyonu (bellek içinde depolama, 50MB limitli)
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB
+  }
+});
 
 // PostgreSQL bağlantısı
 const pool = new Pool({
@@ -50,6 +55,8 @@ const resetPasswordRoutes = require('./routes/reset-password')(pool);
 const messageRoutes = require('./routes/messages')(pool);
 // YENİ EKLENDİ: Fiş route'unu import et
 const receiptRoutes = require('./routes/receipts')(pool, upload);
+// 🔒 Güvenli resim proxy'si
+const proxyReceiptImageRoutes = require('./routes/proxy-receipt-image')(pool);
 // YENİ: Abonelik route'larını import et
 const subscriptionRoutes = require('./routes/subscriptions')(pool);
 
@@ -60,6 +67,7 @@ app.use('/', userRoutes);
 app.use('/', resetPasswordRoutes);
 app.use('/', messageRoutes);
 app.use('/', receiptRoutes);
+app.use('/', proxyReceiptImageRoutes);
 app.use('/', subscriptionRoutes);
 
 

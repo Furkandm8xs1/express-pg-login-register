@@ -410,6 +410,17 @@ async function openReceiptDetail(receiptId) {
         // Modal içeriğini doldur
         document.getElementById('modalTitle').textContent = `Fiş Detayları - ${data.receipt.merchant_name || 'Bilinmeyen'}`;
 
+        // Fiş Fotoğrafını göster (güvenli proxy endpoint üzerinden)
+        const imageContainer = document.getElementById('modalReceiptImage');
+        if (data.receipt.image_url) {
+            const proxyImageUrl = `${API_BASE}/receipts/${receiptId}/image`;
+            document.getElementById('receiptImagePreview').src = proxyImageUrl;
+            document.getElementById('receiptImageDownload').href = proxyImageUrl;
+            imageContainer.style.display = 'block';
+        } else {
+            imageContainer.style.display = 'none';
+        }
+
         // Mağaza adı düzenleme alanı
         document.getElementById('modalMerchantEdit').innerHTML = `
             <input type="text" value="${data.receipt.merchant_name || ''}" 

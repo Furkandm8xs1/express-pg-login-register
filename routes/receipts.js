@@ -28,7 +28,9 @@ module.exports = (pool, upload) => {
 
             const userId = req.user.id;
 
+            // Dosyayı doğrudan Gemini API'ye gönder
             const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+            
             const prompt = `
                 Bu fişi analiz et ve sadece JSON formatında yanıt ver. Markdown kullanma.
                 Format:
@@ -40,7 +42,16 @@ module.exports = (pool, upload) => {
                 }
             `;
 
-            const result = await model.generateContent([prompt, imagePart]);
+            // Buffer'ı Uint8Array'e dönüştür ve doğrudan gönder
+            const result = await model.generateContent([
+                prompt, 
+                {
+                    inlineData: {
+                        data: Buffer.from(req.file.buffer).toString("base64"),
+                        mimeType: req.file.mimetype,
+                    },
+                }
+            ]);
             const response = await result.response;
             let text = response.text();
 

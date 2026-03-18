@@ -690,6 +690,19 @@
                 <button class="close-btn" onclick="closeModal()">&times;</button>
             </div>
 
+            <!-- Fiş Resmi Ön İzlemesi -->
+            <div class="receipt-detail">
+                <label><i class="fas fa-image"></i> Fiş Fotoğrafı</label>
+                <div id="modalReceiptImage" style="display: none; text-align: center; margin: 15px 0;">
+                    <img id="receiptImagePreview" alt="Fiş Fotoğrafı" style="max-width: 100%; max-height: 400px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    <div style="margin-top: 10px;">
+                        <a id="receiptImageDownload" href="#" download class="btn-action" style="display: inline-block; padding: 8px 16px; background: #007bff; color: white; text-decoration: none; border-radius: 8px; font-size: 0.9rem;">
+                            <i class="fas fa-download"></i> İndir
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <!-- YENİ: Mağaza Adı Düzenleme -->
             <div class="receipt-detail">
                 <label><i class="fas fa-store"></i> Mağaza Adı</label>

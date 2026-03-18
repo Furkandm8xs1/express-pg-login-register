@@ -1,25 +1,31 @@
 // routes/proxy-receipt-image.js
-// Bu route, R2'den resim proxy'leme yaparak güvenlik sağlar (isteğe bağlı)
+// Güvenli resim proxy'si: Yalnızca kendi fişlerinin resimlerini görebilirler
 const express = require('express');
-const router = express.Router();
 const { getFromR2 } = require('../utils/r2-storage');
 const { verifyToken } = require('../utils/authMiddleware');
 
-/**
- * Güvenli resim proxy'si (yalnızca kendi fişlerinin resimlerini görebilirler)
- * GET /api/receipts/:receiptId/image
- */
-router.get('/api/receipts/:receiptId/image', verifyToken, async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const receiptId = req.params.receiptId;
+module.exports = (pool) => {
+    const router = express.Router();
 
-        // Veritabanından fiş bilgisini al
-        const pool = require('../server'); // server.js'den pool'u alacak
-        const receiptCheck = await pool.query(
-            `SELECT image_url FROM receipts WHERE id = $1 AND user_id = $2`,
-            [receiptId, userId]
-        );
+    /**
+     * Güvenli resim proxy'si
+     * GET /api/receipts/:receiptId/image
+     * 
+     * 🔒 Güvenlik:
+     * - JWT authentication gerekli
+     * - Fiş sahibi kontrolü yapılır (SQL injection yok)
+     * - URL enumeration saldırısından korunur
+     */
+    router.get('/api/receipts/:receiptId/image', verifyToken, async (req, res) => {
+        try {
+            const userId = req.user.id;
+            const receiptId = req.params.receiptId;
+
+            // 1. Erişim kontrolü: Fiş, bu kullanıcıya mı ait?
+            const receiptCheck = await pool.query(
+                `SELECT image_url FROM receipts WHERE id = $1 AND user_id = $2`,
+                [receiptId, userId]
+            );
 
         if (receiptCheck.rows.length === 0) {
             return res.status(403).json({ error: 'Bu fişe erişim yetkiniz yok' });
@@ -30,29 +36,38 @@ router.get('/api/receipts/:receiptId/image', verifyToken, async (req, res) => {
             return res.status(404).json({ error: 'Resim bulunamadı' });
         }
 
-        // R2 URL'sinden dosya adını çıkar
-        const fileName = imageUrl.split('/').pop();
-        const userId_prefix = `receipts/${userId}`;
+            // 2. R2'den key'i çıkar
+            // Örnek URL: https://pub-xxx.r2.dev/receipts/1/1773778279200-neszjs493.jpg
+            // Key: receipts/1/1773778279200-neszjs493.jpg
+            let r2Key;
+            
+            try {
+                // URL'den key çıkarma (r2.dev/ sonrasındaki kısım)
+                const urlParts = imageUrl.split('r2.dev/');
+                if (urlParts.length === 2) {
+                    r2Key = urlParts[1];
+                } else {
+                    throw new Error('URL formatı geçersiz');
+                }
 
-        try {
-            const imageBuffer = await getFromR2(`${userId_prefix}/${fileName}`);
-            res.setHeader('Content-Type', 'image/jpeg');
-            res.send(imageBuffer);
-        } catch (error) {
-            // Eğer prefix'i tahmin edemediyse, URL'den çıkart
-            const keyFromUrl = imageUrl.split(`${process.env.R2_BUCKET_NAME}.`)[1]?.split('.r2')[0];
-            if (keyFromUrl) {
-                const imageBuffer = await getFromR2(keyFromUrl);
+                // 3. R2'den resmi al ve gönder
+                const imageBuffer = await getFromR2(r2Key);
+                
                 res.setHeader('Content-Type', 'image/jpeg');
+                res.setHeader('Cache-Control', 'private, max-age=3600');
+                res.setHeader('X-Content-Type-Options', 'nosniff');
                 res.send(imageBuffer);
-            } else {
-                throw error;
-            }
-        }
-    } catch (error) {
-        console.error('Resim proxy hatası:', error);
-        res.status(500).json({ error: 'Resim yüklenemedi' });
-    }
-});
 
-module.exports = router;
+            } catch (r2Error) {
+                console.error(`❌ R2 resim çekme hatası:`, r2Error);
+                return res.status(500).json({ error: 'Resim yüklenemedi' });
+            }
+
+        } catch (error) {
+            console.error('❌ Proxy hatası:', error);
+            res.status(500).json({ error: 'Sunucu hatası' });
+        }
+    });
+
+    return router;
+};
