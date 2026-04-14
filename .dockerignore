@@ -1,0 +1,77 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist
+build
+.next
+out
+
+# IDE and editor
+.vscode
+.idea
+.DS_Store
+*.swp
+*.swo
+*~
+.editorconfig
+.prettierignore
+
+# Testing
+.coverage
+coverage
+.nyc_output
+test
+tests
+*.test.js
+*.spec.js
+
+# Development tools
+.nodemon.json
+nodemon.json
+.devcontainer
+
+# Documentation
+README.md
+DOCUMENTATION.md
+*.md
+docs
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Git
+.git
+.github
+
+# CI/CD
+.gitlab-ci.yml
+.github
+*.yml
+*.yaml
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Application specific
+uploads
+.cache
+db.sqlite
+*.log
+logs

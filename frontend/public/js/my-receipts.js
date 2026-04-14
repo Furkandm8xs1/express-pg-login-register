@@ -1,5 +1,5 @@
 // --- AYARLAR ---
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = '/api';
 
 // --- ELEMENTLER ---
 const receiptsContainer = document.getElementById('receiptsContainer');
@@ -23,6 +23,8 @@ let hourlyChart = null;
 let allReceipts = [];
 let filteredReceipts = [];
 let dashboardReceipts = [];
+let subscriptions = [];
+let subscriptionsLoaded = false;
 
 // --- SAYFA YÜKLENDİĞİNDE ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -50,10 +52,12 @@ function setupEventListeners() {
 }
 
 // --- SEKMELERİ DEĞİŞTİRME ---
-function switchTab(tabName) {
+function switchTab(tabName, menuItem) {
     // Menü aktiflik ayarı
     document.querySelectorAll('.menu li').forEach(li => li.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    if (menuItem) {
+        menuItem.classList.add('active');
+    }
 
     // Bölüm değiştirme
     document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
@@ -67,6 +71,10 @@ function switchTab(tabName) {
     // Eğer Dashboard açıldıysa verileri yükle
     if (tabName === 'dashboard') {
         loadDashboardData();
+    }
+
+    if (tabName === 'subscriptions' && !subscriptionsLoaded) {
+        loadSubscriptions();
     }
 }
 
@@ -802,5 +810,259 @@ function filterDashboardByMonth() {
     // Grafikler ve istatistikleri güncelle
     updateStats(filteredData);
     renderCharts(filteredData);
+}
+
+// ============================================================
+// ABONELİKLER FONKSİYONLARI
+// ============================================================
+
+function getSubscriptionElements() {
+    return {
+        tbody: document.getElementById('subscriptionsTbody'),
+        emptyState: document.getElementById('subscriptionsEmptyState'),
+        error: document.getElementById('subscriptionsError'),
+        totalMonthlyCost: document.getElementById('totalMonthlyCost'),
+        totalSubscriptions: document.getElementById('totalSubscriptions'),
+        nameInput: document.getElementById('subscriptionName'),
+        priceInput: document.getElementById('subscriptionPrice'),
+        dayInput: document.getElementById('subscriptionDay'),
+        categoryInput: document.getElementById('subscriptionCategory')
+    };
+}
+
+function formatCurrency(amount) {
+    const value = Number(amount) || 0;
+    return `${value.toFixed(2)} ₺`;
+}
+
+function clearSubscriptionError() {
+    const { error } = getSubscriptionElements();
+    if (!error) return;
+    error.style.display = 'none';
+    error.textContent = '';
+}
+
+function showSubscriptionError(message) {
+    const { error } = getSubscriptionElements();
+    if (!error) return;
+    error.style.display = 'block';
+    error.textContent = message;
+}
+
+async function loadSubscriptions() {
+    try {
+        clearSubscriptionError();
+        const response = await fetch(`${API_BASE}/subscriptions`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+
+        if (response.status === 401 || response.status === 403) {
+            window.location.href = '/login';
+            return;
+        }
+
+        if (!response.ok) {
+            showSubscriptionError('Abonelikler yüklenemedi.');
+            return;
+        }
+
+        const data = await response.json();
+        subscriptions = Array.isArray(data) ? data : [];
+        subscriptionsLoaded = true;
+        renderSubscriptions();
+        updateSubscriptionsSummary();
+    } catch (error) {
+        console.error('Abonelik yükleme hatası:', error);
+        showSubscriptionError('Sunucuya bağlanırken bir hata oluştu.');
+    }
+}
+
+function renderSubscriptions() {
+    const { tbody, emptyState } = getSubscriptionElements();
+    if (!tbody) return;
+
+    if (subscriptions.length === 0) {
+        tbody.innerHTML = '';
+        if (emptyState) emptyState.style.display = 'block';
+        return;
+    }
+
+    if (emptyState) emptyState.style.display = 'none';
+
+    tbody.innerHTML = subscriptions.map(sub => `
+        <tr data-id="${sub.id}">
+            <td><input type="text" name="name" value="${sub.name || ''}"></td>
+            <td><input type="number" name="price" min="0" step="0.01" value="${(Number(sub.monthly_price) || 0).toFixed(2)}"></td>
+            <td><input type="number" name="day" min="1" max="31" value="${sub.billing_day || ''}"></td>
+            <td><input type="text" name="category" value="${sub.category || ''}"></td>
+            <td>
+                <div class="table-actions">
+                    <button type="button" class="btn-small btn-save" onclick="saveSubscription(${sub.id})"><i class="fas fa-save"></i> Kaydet</button>
+                    <button type="button" class="btn-small btn-delete" onclick="deleteSubscription(${sub.id})"><i class="fas fa-trash"></i> Sil</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function updateSubscriptionsSummary() {
+    const { totalMonthlyCost, totalSubscriptions } = getSubscriptionElements();
+    const total = subscriptions.reduce((sum, sub) => sum + (Number(sub.monthly_price) || 0), 0);
+    if (totalMonthlyCost) totalMonthlyCost.textContent = formatCurrency(total);
+    if (totalSubscriptions) totalSubscriptions.textContent = String(subscriptions.length);
+}
+
+function resetSubscriptionForm() {
+    const { nameInput, priceInput, dayInput, categoryInput } = getSubscriptionElements();
+    if (nameInput) nameInput.value = '';
+    if (priceInput) priceInput.value = '';
+    if (dayInput) dayInput.value = '';
+    if (categoryInput) categoryInput.value = '';
+    clearSubscriptionError();
+}
+
+function validateSubscriptionInput(name, priceValue, dayValue) {
+    if (!name || !priceValue || !dayValue) {
+        showSubscriptionError('Ad, aylık fiyat ve fatura günü zorunludur.');
+        return null;
+    }
+
+    const price = parseFloat(priceValue);
+    const day = parseInt(dayValue, 10);
+
+    if (isNaN(price) || price <= 0) {
+        showSubscriptionError('Aylık fiyat 0\'dan büyük olmalıdır.');
+        return null;
+    }
+
+    if (isNaN(day) || day < 1 || day > 31) {
+        showSubscriptionError('Fatura günü 1 ile 31 arasında olmalıdır.');
+        return null;
+    }
+
+    return { price, day };
+}
+
+async function createSubscription() {
+    clearSubscriptionError();
+    const { nameInput, priceInput, dayInput, categoryInput } = getSubscriptionElements();
+    const name = (nameInput?.value || '').trim();
+    const priceValue = priceInput?.value || '';
+    const dayValue = dayInput?.value || '';
+    const category = (categoryInput?.value || '').trim();
+
+    const validated = validateSubscriptionInput(name, priceValue, dayValue);
+    if (!validated) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/subscriptions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                name,
+                monthly_price: validated.price,
+                billing_day: validated.day,
+                category
+            })
+        });
+
+        if (response.status === 401 || response.status === 403) {
+            window.location.href = '/login';
+            return;
+        }
+
+        const result = await response.json();
+        if (!response.ok) {
+            showSubscriptionError(result.error || 'Abonelik eklenemedi.');
+            return;
+        }
+
+        subscriptions.push(result);
+        renderSubscriptions();
+        updateSubscriptionsSummary();
+        resetSubscriptionForm();
+    } catch (error) {
+        console.error('Abonelik ekleme hatası:', error);
+        showSubscriptionError('Abonelik eklenirken hata oluştu.');
+    }
+}
+
+async function saveSubscription(id) {
+    clearSubscriptionError();
+    const row = document.querySelector(`tr[data-id="${id}"]`);
+    if (!row) return;
+
+    const name = (row.querySelector('input[name="name"]')?.value || '').trim();
+    const priceValue = row.querySelector('input[name="price"]')?.value || '';
+    const dayValue = row.querySelector('input[name="day"]')?.value || '';
+    const category = (row.querySelector('input[name="category"]')?.value || '').trim();
+
+    const validated = validateSubscriptionInput(name, priceValue, dayValue);
+    if (!validated) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/subscriptions/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                name,
+                monthly_price: validated.price,
+                billing_day: validated.day,
+                category
+            })
+        });
+
+        if (response.status === 401 || response.status === 403) {
+            window.location.href = '/login';
+            return;
+        }
+
+        const result = await response.json();
+        if (!response.ok) {
+            showSubscriptionError(result.error || 'Abonelik güncellenemedi.');
+            return;
+        }
+
+        const index = subscriptions.findIndex(sub => sub.id === id);
+        if (index !== -1) subscriptions[index] = result;
+        renderSubscriptions();
+        updateSubscriptionsSummary();
+    } catch (error) {
+        console.error('Abonelik güncelleme hatası:', error);
+        showSubscriptionError('Abonelik güncellenirken hata oluştu.');
+    }
+}
+
+async function deleteSubscription(id) {
+    clearSubscriptionError();
+    if (!window.confirm('Bu aboneliği silmek istediğinizden emin misiniz?')) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/subscriptions/${id}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+
+        if (response.status === 401 || response.status === 403) {
+            window.location.href = '/login';
+            return;
+        }
+
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            showSubscriptionError(result.error || 'Abonelik silinemedi.');
+            return;
+        }
+
+        subscriptions = subscriptions.filter(sub => sub.id !== id);
+        renderSubscriptions();
+        updateSubscriptionsSummary();
+    } catch (error) {
+        console.error('Abonelik silme hatası:', error);
+        showSubscriptionError('Abonelik silinirken hata oluştu.');
+    }
 }
 

@@ -27,10 +27,8 @@ module.exports = (pool) => {
       }
     }
 
-    if (category !== undefined) {
-      if (typeof category !== 'string' || category.trim().length === 0) {
-        errors.push('Kategori boş olamaz');
-      }
+    if (category !== undefined && typeof category !== 'string') {
+      errors.push('Kategori metin olmalıdır');
     }
 
     return errors;

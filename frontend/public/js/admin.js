@@ -317,33 +317,47 @@ async function saveCroppedPhoto() {
     const cropY = (containerSize - cropSize) / 2;
 
     ctx.drawImage(canvas, cropX, cropY, cropSize, cropSize, 0, 0, size, size);
-    const photoUrl = outputCanvas.toDataURL('image/jpeg', 0.9);
 
-    try {
-        // GÜNCELLEME: Backend query string (requesterId) beklemiyor, URL temizlendi.
-        const res = await fetch(`http://localhost:3000/user/${userId}/photo`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${token}`, // Token Header'a eklendi
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ photoUrl }) // Backend sadece photoUrl bekliyor
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-            document.getElementById('profilePhoto').src = photoUrl;
-            if (isAdmin) loadAllUsers(); // Admin ise listeyi güncelle
-            closeCropModal();
-            alert('✅ Profil fotoğrafı başarıyla güncellendi!');
-        } else {
-            alert('❌ ' + (data.error || 'Hata oluştu'));
+    // Canvas'ı Blob'a dönüştür
+    outputCanvas.toBlob(async(blob) => {
+        if (!blob) {
+            alert('❌ Resim işleme başarısız oldu');
+            return;
         }
-    } catch (error) {
-        console.error('Save photo error:', error);
-        alert('❌ Sunucuya bağlanılamadı');
-    }
+
+        try {
+            // FormData oluştur ve Blob'u ekle
+            const formData = new FormData();
+            formData.append('photo', blob, 'profile.jpg');
+
+            // Backend'e upload et
+            const res = await fetch(`http://localhost:3000/user/${userId}/photo`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                    // Content-Type header'ı koyma, browser automatic set et
+                },
+                body: formData,
+                credentials: 'include'
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                // Response'dan dönen photoUrl'i kullan (version param içinde)
+                const newPhotoUrl = data.photoUrl;
+                document.getElementById('profilePhoto').src = newPhotoUrl;
+                if (isAdmin) loadAllUsers(); // Admin ise listeyi güncelle
+                closeCropModal();
+                alert('✅ Profil fotoğrafı başarıyla güncellendi!');
+            } else {
+                alert('❌ ' + (data.error || 'Hata oluştu'));
+            }
+        } catch (error) {
+            console.error('Save photo error:', error);
+            alert('❌ Sunucuya bağlanılamadı');
+        }
+    }, 'image/jpeg', 0.9);
 }
 
 async function deleteUser(deleteUserId) {

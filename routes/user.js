@@ -44,6 +44,8 @@ module.exports = function(pool) {
     // KULLANICI BİLGİLERİNİ GETİR (Sadece kendi bilgileri veya Admin)
 
     router.get("/user/:id", verifyToken, validateUserId, requireOwnerOrAdmin, async(req, res) => {
+        // Cache headers - makul cache (1 saat)
+        res.set('Cache-Control', 'private, max-age=3600');
 
         const userId = parseInt(req.params.id);
 
@@ -65,9 +67,7 @@ module.exports = function(pool) {
 
     // TÜM KULLANICILARI LİSTELE (SADECE ADMİN)
     router.get("/users", verifyToken, requireAdmin, async(req, res) => {
-        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-        res.set('Pragma', 'no-cache');
-        res.set('Expires', '0');
+        res.set('Cache-Control', 'private, max-age=1800');
 
         try {
             const result = await pool.query(
@@ -123,10 +123,13 @@ module.exports = function(pool) {
                 const r2Key = `users/${userId}/profile.${fileExtension}`;
 
                 const photoUrl = await uploadToR2(r2Key, req.file.buffer, req.file.mimetype);
+                
+                // Fotoğraf URL'sine version parametresi ekle (cache invalidation için)
+                const photoUrlWithVersion = photoUrl + `?v=${timestamp}`;
 
                 // 3. URL'i database'e kaydet
                 const result = await pool.query(
-                    'UPDATE users SET profile_photo = $1 WHERE id = $2 RETURNING id, profile_photo', [photoUrl, userId]
+                    'UPDATE users SET profile_photo = $1 WHERE id = $2 RETURNING id, profile_photo', [photoUrlWithVersion, userId]
                 );
 
                 if (result.rows.length === 0) {
