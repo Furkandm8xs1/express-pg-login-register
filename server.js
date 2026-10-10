@@ -12,7 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Multer konfigürasyonu (bellek içinde depolama, 50MB limitli)
-const upload = multer({ 
+const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 50 * 1024 * 1024 // 50MB
@@ -72,5 +72,5 @@ app.use('/', subscriptionRoutes);
 
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server http://localhost:${PORT} üzerinde çalışıyor`);
+  console.log(`🚀 Server http://0.0.0.0:${PORT} üzerinde çalışıyor`);
 });
